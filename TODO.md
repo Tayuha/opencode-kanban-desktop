@@ -78,8 +78,8 @@ Tick every item before tagging v0.1.0. Each maps to a card on the board.
       Remove the checkout from the config, restart, reinstall from the global config, and confirm
       board state, tags, links, columns, and settings recover.
 - [ ] **Commit and push the plugin** (card `chore/git-upload`)
-      Local repository initialized; initial commit `b0b7c3e` includes `dist`. Tag `v0.1.0` and
-      push to a remote remain.
+      Repository initialized and `main` pushed to `github.com:Tayuha/opencode-kanban-desktop` (SSH).
+      Tag `v0.1.0` remains pending the release gates.
 - [ ] **Run and sign `docs/release-checklist.md`**
       No unchecked P0 without a written waiver.
 
