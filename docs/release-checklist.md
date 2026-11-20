@@ -173,7 +173,7 @@ Run the listed cases from [`test-plan.md`](test-plan.md). Tick an area only when
 ## 5. Release mechanics
 
 - [ ] Commit `src`, `dist`, docs, `package.json`, and the lockfile in one release commit.
-- [ ] Tag the commit `v0.1.0`.
+- [x] Tag the commit `v0.1.0`.
 - [ ] Reinstall from the tag in a disposable profile or directory and smoke-test the panel.
 - [ ] Confirm **Settings → Extensions → Plugins** still lists the plugin after the fresh install.
 - [ ] Write release notes: features, fixes, known limitations, Desktop version, the global board

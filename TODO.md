@@ -77,9 +77,9 @@ Tick every item before tagging v0.1.0. Each maps to a card on the board.
 - [ ] **Fresh install and persistence pass**
       Remove the checkout from the config, restart, reinstall from the global config, and confirm
       board state, tags, links, columns, and settings recover.
-- [ ] **Commit and push the plugin** (card `chore/git-upload`)
-      Repository initialized and `main` pushed to `github.com:Tayuha/opencode-kanban-desktop` (SSH).
-      Tag `v0.1.0` remains pending the release gates.
+- [x] **Commit and push the plugin** (card `chore/git-upload`)
+      Repository initialized; `main` and tag `v0.1.0` pushed to
+      `github.com:Tayuha/opencode-kanban-desktop` (SSH). The remaining release gates still apply.
 - [ ] **Run and sign `docs/release-checklist.md`**
       No unchecked P0 without a written waiver.
 
