@@ -472,11 +472,11 @@ leaves the session bound and open and reports a toast.
 
 ## Testing
 
-The documented v0.1.1 suite has 122 vitest cases:
+The documented v0.1.1 suite has 124 vitest cases:
 
 | File | Cases | Focus |
 |---|---:|---|
-| `model/board.test.ts` | 58 | defaults, create/update/move/archive/delete/undo, task directories, per-project columns and tags, server ids and claiming, normalization, duplicate branches/counts, colors, session merge, shape check, branch generation |
+| `model/board.test.ts` | 60 | defaults, create/update/move/archive/delete/undo, task directories, per-project columns and tags, server ids and claiming, normalization, duplicate branches/counts, colors, session merge, shape check, branch generation |
 | `model/status.test.ts` | 12 | path normalization, session rows, pinned vs discovery matching, existing-folder matching, descendants, live derivation, status/transition helpers |
 | `model/todo.test.ts` | 8 | todo normalization, newest tool call, metadata/text fallbacks, percentage |
 | `model/projects.test.ts` | 10 | names, sort/dedupe, same-folder ids, routed fallback, lookups |

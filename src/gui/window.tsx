@@ -22,6 +22,7 @@ import type { Task } from "./model/types.ts"
 import {
   archiveTask as archiveTaskModel,
   bindSession,
+  boardKey,
   categories,
   claimTask,
   createTask as createTaskModel,
@@ -36,6 +37,7 @@ import {
   normalizeBoard,
   restoreTask as restoreTaskModel,
   restoreDeletedTask,
+  sameBoard,
   taskDirectory,
   updateTask as updateTaskModel,
 } from "./model/board.ts"
@@ -447,11 +449,11 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
   }
 
   const normalized = normalizeBoard(ctx.stores.board.value)
-  if (JSON.stringify(normalized) !== JSON.stringify(ctx.stores.board.value)) {
+  if (!sameBoard(normalized, ctx.stores.board.value)) {
     ctx.stores.board.set(normalized)
   }
 
-  let lastWritten = JSON.stringify(normalized)
+  let lastWritten = boardKey(normalized)
   let lastBoard = lastWritten
   let lastFile: string | undefined
   let autoTimer: ReturnType<typeof setTimeout> | undefined
@@ -478,7 +480,7 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
     const session = ctx.sessions.current()
     const project = autoTarget()
     if (!session || !project) return
-    const snapshot = JSON.stringify(ctx.stores.board.value)
+    const snapshot = boardKey(ctx.stores.board.value)
     if (snapshot === lastWritten) return
     if (autoInFlight) {
       autoAgain = true
@@ -526,21 +528,21 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
   }
 
   createEffect(() => {
-    const state = JSON.stringify(ctx.stores.board.value)
+    const state = boardKey(ctx.stores.board.value)
     if (state === lastWritten || ctx.stores.prefs.value.autoExport === false) return
     scheduleAuto()
   })
 
   createEffect(() => {
     if (!ctx.sessions.current()) return
-    if (JSON.stringify(ctx.stores.board.value) === lastWritten) return
+    if (boardKey(ctx.stores.board.value) === lastWritten) return
     if (ctx.stores.prefs.value.autoExport === false) return
     scheduleAuto()
   })
 
   createEffect(() => {
     if (!ctx.stores.prefs.value.lastProjectID) return
-    if (JSON.stringify(ctx.stores.board.value) === lastWritten) return
+    if (boardKey(ctx.stores.board.value) === lastWritten) return
     if (ctx.stores.prefs.value.autoExport === false) return
     scheduleAuto()
   })
@@ -556,7 +558,7 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
     if (key !== reloadKey) {
       reloadKey = key
       lastFile = undefined
-      lastBoard = JSON.stringify(ctx.stores.board.value)
+      lastBoard = boardKey(ctx.stores.board.value)
       reloadConflict = false
     }
 
@@ -569,12 +571,12 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
 
       if (lastFile === undefined) {
         lastFile = fileJson
-        lastBoard = JSON.stringify(ctx.stores.board.value)
+        lastBoard = boardKey(ctx.stores.board.value)
         return
       }
       if (fileJson === lastFile) return
 
-      const current = JSON.stringify(ctx.stores.board.value)
+      const current = boardKey(ctx.stores.board.value)
       if (current !== lastBoard) {
         if (!reloadConflict) {
           reloadConflict = true
@@ -592,8 +594,8 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
       if (!isBoardLike(parsed)) return
 
       const next = mergeSessionBindings(normalizeBoard(parsed), board())
-      const before = JSON.stringify(ctx.stores.board.value)
-      const after = JSON.stringify(next)
+      const before = boardKey(ctx.stores.board.value)
+      const after = boardKey(next)
       lastFile = fileJson
       lastBoard = after
       reloadConflict = false
@@ -1056,7 +1058,7 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
         return
       }
       try {
-        const snapshot = JSON.stringify(ctx.stores.board.value)
+        const snapshot = boardKey(ctx.stores.board.value)
         const json = JSON.stringify(ctx.stores.board.value, null, 2) + "\n"
         const response = (await ctx.client.rpc(KanbanBoard).save({
           directory: project.root,
@@ -1125,7 +1127,7 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
         ctx.stores.board.set(next)
         live.invalidate()
         lastFile = response.json
-        lastBoard = JSON.stringify(next)
+        lastBoard = boardKey(next)
         reloadConflict = false
         notify(
           "success",

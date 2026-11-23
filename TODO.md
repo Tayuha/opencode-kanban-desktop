@@ -18,7 +18,7 @@ board; this file is the durable release view. The gate to run is
 
 Implemented and unit-tested:
 
-- One CommonJS GUI bundle; 122 tests; typecheck clean; deterministic build
+- One CommonJS GUI bundle; 124 tests; typecheck clean; deterministic build
 - Server part and board file RPC (load and save) with atomic writes
 - Board, columns, archive, search, keyboard and drag operations
 - Git worktrees and sessions through the OpenCode API
@@ -95,7 +95,7 @@ Implemented and covered by the 122 automated tests:
 
 - [x] Bundle builds as one CommonJS file (`dist/gui-experimental.cjs`)
 - [x] `npm run typecheck` is clean
-- [x] `npm test` passes 122 cases
+- [x] `npm test` passes 124 cases
 - [x] Bundle requires only shared modules (`effect`, GUI, rpc, solid-js, solid-js/web)
 - [x] Server part loads; plugin id is `nmdra.kanban-desktop`
 - [x] Board file RPC (load/save), Export board, Reload board, and pre-reload backup

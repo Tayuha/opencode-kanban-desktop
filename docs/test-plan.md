@@ -3,7 +3,7 @@
 Two layers: automated unit tests for everything that does not need a GUI, and a manual Desktop
 plan for the contributions and API calls that only the app can exercise.
 
-The documented v0.1.1 suite has **122 cases**. It covers the pure model, the live registry with a
+The documented v0.1.1 suite has **124 cases**. It covers the pure model, the live registry with a
 fake client, the board-file server code, the store definition, and formatting. It cannot cover
 Desktop's event timing, tabs, dialogs, notifications, clipboard, or worktree API.
 
@@ -20,7 +20,7 @@ npm run build
 The build is expected to produce `dist/gui-experimental.cjs`; a second build should be
 byte-identical and the bundle should require only the five shared modules.
 
-### `model/board.test.ts` — 58 cases
+### `model/board.test.ts` — 60 cases
 
 - default board seeds Todo / In progress / Done
 - positions are per project and column
@@ -47,6 +47,8 @@ byte-identical and the bundle should require only the five shared modules.
 - task moves reject a column owned by another project
 - normalization validates each project's column set and drops empty sets
 - records the server id and scopes positions per server
+- canonical board key ignores object key order
+- a normalized duplicate-id board compares equal
 - an existing folder wins over a worktree and the project root
 - an existing folder is stored and normalized without a worktree
 - claims a legacy task on session bind or first server edit

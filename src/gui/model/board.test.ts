@@ -5,6 +5,7 @@ import {
   archiveTask,
   archivedTasks,
   bindSession,
+  boardKey,
   claimTask,
   categories,
   createTask,
@@ -27,6 +28,7 @@ import {
   projectTaskCounts,
   restoreTask,
   restoreDeletedTask,
+  sameBoard,
   safeColor,
   tagsOf,
   taskDirectory,
@@ -64,6 +66,29 @@ describe("defaultBoard", () => {
     const board = defaultBoard()
     expect(categories(board).map((category) => category.name)).toEqual(["Todo", "In progress", "Done"])
     expect(board.tasks).toEqual([])
+  })
+})
+
+describe("boardKey", () => {
+  it("ignores object key order", () => {
+    const board = defaultBoard()
+    const reordered = {
+      tasks: board.tasks,
+      categories: board.categories,
+      version: board.version,
+      tags: board.tags,
+    } as Board
+    expect(boardKey(board)).toBe(boardKey(reordered))
+    expect(sameBoard(board, reordered)).toBe(true)
+  })
+
+  it("treats a normalized duplicate task as the same board", () => {
+    const board = createTask(defaultBoard(), input())
+    const duplicated = {
+      ...board,
+      tasks: [...board.tasks, { ...board.tasks[0]!, title: "Copy", position: 1 }],
+    }
+    expect(sameBoard(normalizeBoard(duplicated), board)).toBe(true)
   })
 })
 

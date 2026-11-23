@@ -638,6 +638,26 @@ function normalizeTagList(input: unknown): Tag[] {
   return tags
 }
 
+/** A stable board key for equality checks; object key order does not matter. */
+export function boardKey(board: Board): string {
+  const canonical = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(canonical)
+    if (value && typeof value === "object") {
+      return Object.fromEntries(
+        Object.keys(value as Record<string, unknown>)
+          .sort()
+          .map((key) => [key, canonical((value as Record<string, unknown>)[key])]),
+      )
+    }
+    return value
+  }
+  return JSON.stringify(canonical(board))
+}
+
+export function sameBoard(a: Board, b: Board): boolean {
+  return boardKey(a) === boardKey(b)
+}
+
 /** Repairs stored data after a schema change or hand-edited storage. */
 export function normalizeBoard(input: Partial<Board> | undefined): Board {
   const categories = normalizeCategoryList(input?.categories)

@@ -47,7 +47,7 @@ npm run build
 
 - [ ] `npm ci` completes from the lockfile.
 - [ ] `npm run typecheck` exits 0.
-- [ ] `npm test` passes **122** cases. If the count changed, update README, design, test-plan, and
+- [ ] `npm test` passes **124** cases. If the count changed, update README, design, test-plan, and
       the acceptance checklist before signing.
 - [ ] `npm run build` emits `dist/gui-experimental.cjs`.
 - [ ] A second build is byte-identical:

@@ -25,7 +25,7 @@ Current line:
 
 1. **Preflight**
    - `npm run typecheck`
-   - `npm test` (currently 122 cases)
+   - `npm test` (currently 124 cases)
    - `npm run build`, then build again and compare the bundles byte for byte
    - `npm audit --audit-level=high`
    - Run the affected manual cases in [`test-plan.md`](test-plan.md) and the release gates in
