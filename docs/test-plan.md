@@ -3,7 +3,7 @@
 Two layers: automated unit tests for everything that does not need a GUI, and a manual Desktop
 plan for the contributions and API calls that only the app can exercise.
 
-The documented v0.1.0 suite has **120 cases**. It covers the pure model, the live registry with a
+The documented v0.1.0 suite has **122 cases**. It covers the pure model, the live registry with a
 fake client, the board-file server code, the store definition, and formatting. It cannot cover
 Desktop's event timing, tabs, dialogs, notifications, clipboard, or worktree API.
 
@@ -93,10 +93,12 @@ byte-identical and the bundle should require only the five shared modules.
 - non-assistant messages and empty lists
 - progress percentage
 
-### `model/projects.test.ts` — 8 cases
+### `model/projects.test.ts` — 10 cases
 
 - names from the last path segment, Windows paths, trailing slashes
 - sort and dedupe project rows
+- dedupe different ids for the same canonical folder
+- replace a duplicate folder with the routed project id
 - merge the routed project before the list loads
 - no duplicate when the list already has it
 - mounted project beats the directory fallback
@@ -228,6 +230,7 @@ cases.
 | K-36 | Switch projects in the panel header | The other project's board and columns load; creating a task targets that project |
 | K-36b | Create a task and export the board | The exported task contains the mounted server's `serverID`; a legacy task without one is claimed when its project opens |
 | K-36c | Open two servers that expose the same project ID (if available) | Cards, live status, and the pill do not mix tasks from the other server |
+| K-36d | When OpenCode has two project records for the same folder (for example cache-stats), open the project switcher | The folder appears once; selecting it uses the routed project id and its tasks |
 | K-37 | Inspect `dist/gui-experimental.cjs` | Requires only `effect`, `@opencode/plugin/gui`, `@opencode/plugin/rpc`, `solid-js`, `solid-js/web` |
 | K-38 | Search the source/bundle for process and network APIs | No `child_process`, shell execution, `spawn(`, `fetch(`, WebSocket, telemetry, or external URL. Do not flag the regex `.exec(` already present in source |
 | K-39 | Archive or delete a running task | The session keeps running; no process is killed |

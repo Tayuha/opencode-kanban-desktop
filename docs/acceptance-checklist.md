@@ -8,7 +8,7 @@ The board file's exact behavior is in [`board-file.md`](board-file.md).
 
 - [ ] `npm ci` from a clean checkout
 - [ ] `npm run typecheck` exits 0
-- [ ] `npm test` passes every case (**120** at the time of writing; update the docs if the count changes)
+- [ ] `npm test` passes every case (**122** at the time of writing; update the docs if the count changes)
 - [ ] `npm run build` emits `dist/gui-experimental.cjs`
 - [ ] A second build is byte-identical (`cp dist/gui-experimental.cjs /tmp/a && npm run build && cmp /tmp/a dist/gui-experimental.cjs`)
 - [ ] The bundle requires only `effect`, `@opencode/plugin/gui`, `@opencode/plugin/rpc`, `solid-js`, and `solid-js/web`
@@ -117,6 +117,7 @@ The board file's exact behavior is in [`board-file.md`](board-file.md).
 - [ ] Tasks, columns, positions, archives, settings, and session links survive a Desktop restart
 - [ ] New tasks record the mounted server id; legacy tasks are claimed when their project opens
 - [ ] The board, archive, pill, and live status do not mix tasks from another server with the same project id
+- [ ] Two OpenCode project records for the same folder appear once in the switcher; the routed id wins
 - [ ] The project switcher follows the routed session's project on open
 - [ ] Export writes the **whole installation board** (every project, all tags/columns, archived cards) to the selected project's root
 - [ ] Export keeps an existing previous file as `kanban-board.json.bak`

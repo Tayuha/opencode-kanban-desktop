@@ -45,7 +45,7 @@ npm run build
 
 - [ ] `npm ci` completes from the lockfile.
 - [ ] `npm run typecheck` exits 0.
-- [ ] `npm test` passes **120** cases. If the count changed, update README, design, test-plan, and
+- [ ] `npm test` passes **122** cases. If the count changed, update README, design, test-plan, and
       the acceptance checklist before signing.
 - [ ] `npm run build` emits `dist/gui-experimental.cjs`.
 - [ ] A second build is byte-identical:
@@ -138,7 +138,7 @@ Run the listed cases from [`test-plan.md`](test-plan.md). Tick an area only when
       receive a file.
 - [ ] K-47 — an empty-board reload has no confirmation and writes no new backup.
 - [ ] K-35 — tasks, tags, columns, positions, archives, settings, and session links survive a restart.
-- [ ] K-36, K-36b, K-36c — project switcher, server id recording, and server-scoped boards.
+- [ ] K-36, K-36b, K-36c, K-36d — project switcher, server id recording, server-scoped boards, duplicate folder records.
 - [ ] One hand-edited board with an unknown category/tag still loads through `normalizeBoard`.
 - [ ] Do not use the stale seed file as a backup. Do not claim unrelated statuses or tag
       assignments are preserved by reload; only a missing `sessionID` for the same task ID is

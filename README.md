@@ -12,7 +12,7 @@ OpenCode Desktop's native project, worktree, session, tab, dialog, and notificat
 
 **Release scope:** local/private v0.1.0 for OpenCode Desktop 2.3.2. The package is `private: true`
 and installs from this checkout; it is not published to npm. The documented v0.1.0 baseline passes
-`typecheck`, 120 unit tests, and a deterministic single-file GUI build.
+`typecheck`, 122 unit tests, and a deterministic single-file GUI build.
 
 ## Requirements
 
@@ -365,7 +365,8 @@ until you export it. The board file in a project root is an explicit snapshot yo
 
 Columns and tags are per project. A project without its own `categoriesByProject` or
 `tagsByProject` entry follows the shared defaults; the first edit copies those defaults into the
-project's own set. Tasks record the `serverID` that owns them; legacy tasks without one are claimed
+project's own set. The project switcher deduplicates by canonical folder path, so two OpenCode
+project records for the same directory appear once; the routed project's id wins. Tasks record the `serverID` that owns them; legacy tasks without one are claimed
 by the first server that opens a board knowing their project. The local Desktop server is
 `sidecar`, so a single-server board legitimately has `sidecar` on every task. The project switcher
 in the panel header shows another project's board without leaving the session, including that
@@ -450,7 +451,7 @@ Two common cases:
 
 ```bash
 npm run typecheck   # tsc --noEmit
-npm test            # vitest: 120 cases
+npm test            # vitest: 122 cases
 npm run build       # dist/gui-experimental.cjs
 npm run dev         # vite build --watch
 npm run coverage    # optional coverage run

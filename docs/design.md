@@ -430,6 +430,9 @@ leaves the session bound and open and reports a toast.
   icon.
 - **Search and tags are separate.** Search matches text fields; tags use an AND filter. Neither
   changes the stored board.
+- **Project switcher dedupes by folder.** OpenCode can expose two project IDs for one worktree
+  (for example a `global` record and a hashed record). The switcher keeps one row per canonical
+  folder, and the routed project ID replaces the duplicate row.
 
 ## Failure handling
 
@@ -469,14 +472,14 @@ leaves the session bound and open and reports a toast.
 
 ## Testing
 
-The documented v0.1.0 suite has 120 vitest cases:
+The documented v0.1.0 suite has 122 vitest cases:
 
 | File | Cases | Focus |
 |---|---:|---|
 | `model/board.test.ts` | 58 | defaults, create/update/move/archive/delete/undo, task directories, per-project columns and tags, server ids and claiming, normalization, duplicate branches/counts, colors, session merge, shape check, branch generation |
 | `model/status.test.ts` | 12 | path normalization, session rows, pinned vs discovery matching, existing-folder matching, descendants, live derivation, status/transition helpers |
 | `model/todo.test.ts` | 8 | todo normalization, newest tool call, metadata/text fallbacks, percentage |
-| `model/projects.test.ts` | 8 | names, sort/dedupe, routed fallback, lookups |
+| `model/projects.test.ts` | 10 | names, sort/dedupe, same-folder ids, routed fallback, lookups |
 | `model/select.test.ts` | 7 | text/tag filters, server scope, column/archive selection, neighbours, status keys |
 | `data/live.test.ts` | 8 | derived live state, server-scoped tasks, pinned-session hydration, archived pins, deleted-pin reporting, missing-pin isolation, running→idle callback, stale fallback with a fake client |
 | `server/board-file.test.ts` | 9 | read/write, missing/invalid/oversized/aborted, `.bak`, separate backup |

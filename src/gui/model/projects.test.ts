@@ -14,6 +14,16 @@ describe("projectRows", () => {
     ])
   })
 
+  it("deduplicates different ids for the same canonical folder", () => {
+    const rows = projectRows([
+      { id: "one", canonical: "/work/repo/" },
+      { id: "two", canonical: "/work/repo" },
+      { id: "three", canonical: "C:\\Work\\Repo\\" },
+      { id: "four", canonical: "c:/work/repo" },
+    ])
+    expect(rows.map((row) => row.id)).toEqual(["one", "three"])
+  })
+
   it("derives names from a trailing slash and Windows path", () => {
     expect(baseName("/work/alpha/")).toBe("alpha")
     expect(baseName("C:\\work\\alpha")).toBe("alpha")
@@ -34,6 +44,17 @@ describe("mergeProject", () => {
   it("does not duplicate an existing project", () => {
     const rows = [{ id: "a", name: "A", root: "/a" }]
     expect(mergeProject(rows, { id: "a", name: "Renamed", worktree: "/a" })).toEqual(rows)
+  })
+
+  it("replaces a duplicate folder with the routed project id", () => {
+    const rows = [
+      { id: "old", name: "Repo", root: "/work/repo/" },
+      { id: "other", name: "Other", root: "/other" },
+    ]
+    expect(mergeProject(rows, { id: "live", name: "Repo", worktree: "/work/repo" })).toEqual([
+      { id: "other", name: "Other", root: "/other" },
+      { id: "live", name: "Repo", root: "/work/repo" },
+    ])
   })
 })
 

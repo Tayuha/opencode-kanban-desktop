@@ -13,7 +13,7 @@ board; this file is the durable release view. The gate to run is
 
 Implemented and unit-tested:
 
-- One CommonJS GUI bundle; 120 tests; typecheck clean; deterministic build
+- One CommonJS GUI bundle; 122 tests; typecheck clean; deterministic build
 - Server part and board file RPC (load and save) with atomic writes
 - Board, columns, archive, search, keyboard and drag operations
 - Git worktrees and sessions through the OpenCode API
@@ -32,6 +32,7 @@ Implemented and unit-tested:
 - Existing-folder task mode (project subfolders) and linked-session prefill
 - Help key column widened and key chips wrap
 - Auto-export and auto-reload of kanban-board.json with settings and conflict protection (pending GUI verification)
+- Project switcher deduplicates same-folder project records (pending GUI verification)
 - Starter board and tags in the working project
 
 Verified in Desktop on 2026-11-20 (user pass):
@@ -85,11 +86,11 @@ Tick every item before tagging v0.1.0. Each maps to a card on the board.
 
 ## Done
 
-Implemented and covered by the 120 automated tests:
+Implemented and covered by the 122 automated tests:
 
 - [x] Bundle builds as one CommonJS file (`dist/gui-experimental.cjs`)
 - [x] `npm run typecheck` is clean
-- [x] `npm test` passes 120 cases
+- [x] `npm test` passes 122 cases
 - [x] Bundle requires only shared modules (`effect`, GUI, rpc, solid-js, solid-js/web)
 - [x] Server part loads; plugin id is `nmdra.kanban-desktop`
 - [x] Board file RPC (load/save), Export board, Reload board, and pre-reload backup
