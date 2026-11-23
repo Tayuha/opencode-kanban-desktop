@@ -119,14 +119,16 @@ Implemented and covered by the 122 automated tests:
 - [x] Project-list dedupe verified with v0.1.1 (2026-11-23)
 - [x] Custom icon support checked: only the app icon catalog exists in 2.3.2 (2026-11-23)
 - [x] Upgrade/release plan documented in `docs/upgrading.md` (2026-11-23)
+- [x] Documentation audited and expanded; AGENTS/upgrading/README/design/test docs current (2026-11-23)
 - [x] AI agent guide documented in `AGENTS.md` (2026-11-23)
 
 ## P1 — follow-ups
 
 - [ ] Pin closed or arbitrary sessions, beyond the open-session linker
-- [ ] Verify worktree-removal delete has no Undo in a real git project (deferred; main project is non-git)
+- [ ] Verify worktree-removal delete has no Undo in a real git project (covered by the worktree/session pass; use the plugin repo)
 - [ ] Custom plugin icons when the SDK exposes them
-- [ ] Re-pin and re-test when Desktop changes the experimental GUI API
+- [ ] Re-pin and re-test when Desktop changes the experimental GUI API (2.3.2 is still latest as of 2026-11-23)
+- [ ] Capture README screenshots manually (spectacle CLI unavailable here)
 - [ ] macOS and Windows smoke test
 - [ ] Optional tag presets and tag reordering
 
