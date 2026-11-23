@@ -36,8 +36,8 @@ Implemented and unit-tested:
 - Server id recorded on tasks, with legacy claiming and server-scoped live/board state
 - Existing-folder task mode (project subfolders) and linked-session prefill
 - Help key column widened and key chips wrap
-- Auto-export and auto-reload of kanban-board.json with settings and conflict protection (pending GUI verification)
-- Project switcher deduplicates same-folder project records (pending GUI verification)
+- Auto-export and auto-reload of kanban-board.json with settings, canonical no-change detection, and conflict protection
+- Project switcher deduplicates same-folder project records
 - Starter board and tags in the working project
 
 Verified in Desktop on 2026-11-20 (user pass):
@@ -115,6 +115,9 @@ Implemented and covered by the 122 automated tests:
 - [x] Existing-folder task mode and linked-session prefill verified in Desktop (2026-11-20)
 - [x] Help key-column overlap fixed and verified in Desktop (2026-11-20)
 - [x] Completion notifications verified in Desktop (2026-11-20)
+- [x] Auto-export and auto-reload verified in Desktop (2026-11-23)
+- [x] Project-list dedupe verified with v0.1.1 (2026-11-23)
+- [x] Custom icon support checked: only the app icon catalog exists in 2.3.2 (2026-11-23)
 - [x] Upgrade/release plan documented in `docs/upgrading.md` (2026-11-23)
 - [x] AI agent guide documented in `AGENTS.md` (2026-11-23)
 
