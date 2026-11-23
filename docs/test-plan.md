@@ -3,7 +3,7 @@
 Two layers: automated unit tests for everything that does not need a GUI, and a manual Desktop
 plan for the contributions and API calls that only the app can exercise.
 
-The documented v0.1.1 suite has **137 cases**. It covers the pure model, the live registry with a
+The documented v0.1.1 suite has **139 cases**. It covers the pure model, the live registry with a
 fake client, the board-file server code, the store definition, and formatting. It cannot cover
 Desktop's event timing, tabs, dialogs, notifications, clipboard, or worktree API.
 
@@ -125,6 +125,11 @@ byte-identical and the bundle should require only the five shared modules.
 - neighbours in a column
 - status key mapping
 
+### `data/actions.test.ts` — 2 cases
+
+- passes the selected base ref instead of the generated branch
+- sanitizes the worktree name and omits blank inputs
+
 ### `data/live.test.ts` — 8 cases
 
 - running status, cost, and parsed todos from a fake client
@@ -190,9 +195,10 @@ cases.
 | K-04 | Open the panel on a project with no tasks | Empty state with a **New task** button |
 | K-05 | Create a task in a non-git folder with worktree off | Card appears; no worktree; Open creates and binds a session in the project root |
 | K-05b | Create a task with **Existing folder** set to a folder inside the project (Browse or type), then open it | The card shows the folder; the linked session runs there; no worktree is created; the branch prefills the folder's current branch when it is a git repo |
-| K-06 | Create a task in a git project with worktree on and a prompt (**Open a session** on, the default) | Worktree is created; a linked session opens in that directory with the prompt prefilled; the card shows the worktree name and the session is bound before sending |
-| K-07 | Leave the branch empty and enter a title; press **Generate** | Branch is generated as `feature/<word>-<word>-NNN`; **Generate** replaces it with another valid name |
-| K-08 | Try a branch with a space, a duplicate branch, and an empty title+branch | The dialog shows the matching validation message and stays open; no card/worktree is created |
+| K-06 | Create a task in a git project with worktree on and a prompt (**Open a session** on, the default) | A detached worktree is created at the base ref; no git branch is created; a linked session opens in that directory with the prompt prefilled; the card shows the worktree name and the session is bound before sending |
+| K-06b | Inspect the worktree with git | `git worktree list` shows it detached at the base commit; create a branch inside it manually; the plugin neither creates nor deletes that branch |
+| K-07 | Leave the branch name empty and enter a title; press **Generate** | A worktree label is generated as `feature/<word>-<word>-NNN`; **Generate** replaces it with another valid name |
+| K-08 | Try a branch name with a space, a duplicate label, and an empty title+label | The dialog shows the matching validation message and stays open; no card/worktree is created |
 | K-09 | Drag a card to another column and between two cards | Card moves, order is correct, counts update |
 | K-10 | Select a card, press Shift+Right and Shift+Up | Task changes column, then reorders within the column |
 | K-11 | Open **Columns** on project A: add, rename, recolor, move up/down | Project A updates live; tasks follow their column |
@@ -207,7 +213,7 @@ cases.
 | K-16 | Delete a task with a worktree; decline worktree removal, then click **Undo** | Card is deleted; worktree remains on disk; Undo restores the card at its old position and the session keeps running |
 | K-16b | Delete an existing-folder task | No worktree-removal dialog; the folder still exists; the toast offers Undo like a plain card delete |
 | K-16c | Type a relative path, a missing absolute path, or a folder outside the project in **Existing folder**, then create | Each is rejected with matching copy; choose a folder inside the project |
-| K-17 | Delete a task with a clean worktree; accept removal | Worktree is removed; branch remains; the card is gone and no Undo action is offered |
+| K-17 | Delete a task with a clean worktree; accept removal | Worktree is removed; no branch was created to clean up; the card is gone and no Undo action is offered |
 | K-18 | Delete a task with a dirty worktree; accept removal, then force | First removal fails; a force confirmation names the error; force removes it; declining keeps both task and worktree |
 | K-19 | Edit a task's title, column, notes, and tags | Changes persist across a reopen |
 | K-20 | Double-click a card with no session, with **Opening a task = Reuse** | A session is created in its directory, bound to the card, and opened |

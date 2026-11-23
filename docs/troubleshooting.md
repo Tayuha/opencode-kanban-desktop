@@ -117,10 +117,13 @@ The toast asking for a restart is the intended message for `rpc.method_not_found
 The dialog shows the server error and no card is written. Check:
 
 - the project is a git repository and `vcs.get`/`vcs.base` work there;
-- the base branch exists;
+- the base ref exists;
 - the branch name is valid and not already used by another task in the same project;
-- the branch/worktree is not already checked out elsewhere;
 - the app can write to its worktree directory.
+
+OpenCode 2.3.2 creates a detached worktree and does not create a git branch. If you expected a new
+branch to exist, create it inside the worktree yourself before committing. Avoid reusing a worktree
+directory that is already checked out elsewhere.
 
 Turn **Create a git worktree** off to create a plain card in the project root while you investigate.
 
@@ -128,10 +131,7 @@ Turn **Create a git worktree** off to create a plain card in the project root wh
 
 A dirty worktree fails the first, non-forced removal. The force confirmation shows the server error
 and names the risk; declining keeps both the task and the worktree. If you accept, the worktree is
-removed but the branch remains.
-
-Delete the branch manually with git after you are sure its commits are not needed. The plugin does
-not expose branch deletion.
+removed. The plugin never created or deleted a git branch, so there is no branch cleanup.
 
 ## A card has no status, todos, or cost
 

@@ -1,6 +1,6 @@
 # Kanban for OpenCode Desktop
 
-A kanban board that lives inside OpenCode Desktop. Each card is a task with a branch, an
+A kanban board that lives inside OpenCode Desktop. Each card is a task with a branch label, an
 optional git worktree, and the OpenCode session working in it. Columns are movable, cards drag
 between them, and the board tracks which agents are running, what their todo lists say, and what
 changed in the worktree.
@@ -12,7 +12,7 @@ OpenCode Desktop's native project, worktree, session, tab, dialog, and notificat
 
 **Release scope:** local/private v0.1.1 for OpenCode Desktop 2.3.2. The package is `private: true`
 and installs from this checkout; it is not published to npm. The documented v0.1.1 baseline passes
-`typecheck`, 137 unit tests, and a deterministic single-file GUI build.
+`typecheck`, 139 unit tests, and a deterministic single-file GUI build.
 
 ## Requirements
 
@@ -107,7 +107,7 @@ Every successful build reloads the GUI plugin in open Desktop windows.
 1. Open or create an OpenCode session in a project.
 2. Open the board from the command palette (**Kanban: open board**), with `mod+alt+k`, with
    `/kanban`, or from the session side region's **+** menu.
-3. Press **New task**, choose a title, leave the branch blank to generate one, and keep
+3. Press **New task**, choose a title, leave the branch name blank to generate one, and keep
    **Create a git worktree** on for a git project.
 4. Review the linked session that opens in the worktree with the prompt prefilled, or enable
    **Send the initial prompt automatically** in the task dialog to start the agent immediately.
@@ -147,7 +147,7 @@ dialog and shares the same per-project board data and live state.
   narrow panel. Toggle with the collapse/expand button in the header, `C`, the palette, or
   **Settings → Kanban → Column density**. Cards stay draggable and keep their menu; scroll-mode
   columns cap at 220px.
-- **Cards** show the title, branch, worktree name, live status (running / idle / no session), todo
+- **Cards** show the title, branch label, worktree name, live status (running / idle / no session), todo
   progress, running subagent count, and session-plus-subagent cost. Tags appear as chips.
 - **Drag** a card onto another column or between cards to reorder. The arrow keys move the
   selection; **Shift + arrows** move the task itself.
@@ -182,11 +182,16 @@ v0.1.1 tags are split into their owning project during the one-time migration.
 
 ### Tasks, worktrees, and sessions
 
-Creating a task asks for a project, title, branch, base branch, folder, column, notes, tags, and
-an initial prompt. With **Create a git worktree** on (the default for git projects), the plugin
-calls OpenCode's native worktree API and stores the returned directory. The branch is generated as
-`feature/<adjective>-<noun>-NNN` when left empty; the **Generate** button replaces the field with
+Creating a task asks for a project, title, branch name, base branch, folder, column, notes, tags,
+and an initial prompt. With **Create a git worktree** on (the default for git projects), the plugin
+calls OpenCode's native worktree API and stores the returned directory. The branch name is generated
+as `feature/<adjective>-<noun>-NNN` when left empty; the **Generate** button replaces the field with
 another generated name.
+
+OpenCode 2.3.2 creates a **detached worktree** from the base ref and does **not** create a git
+branch. The task's branch name labels the worktree directory and the card; create the actual branch
+inside the worktree before committing. The plugin never runs shell commands, creates branches, or
+deletes branches.
 
 **Existing folder** is optional. Browse to or type an absolute folder and the task runs there
 instead of the project root or a new worktree. The plugin never creates or removes that folder;
@@ -444,8 +449,9 @@ permission list.
 - **Pinned sessions and deletion.** An archived pinned session stays linked and shows idle. If the
   server confirms a pinned session was deleted, the board clears the pin after the next refresh and
   shows a toast; **New session** or **Link session…** can attach another one.
-- **No branch deletion.** The public worktree API removes a worktree, not its branch. Delete the
-  branch with git after removing the worktree.
+- **Worktrees are detached.** OpenCode 2.3.2 creates a detached worktree from the base ref and
+  never creates a git branch. The task's branch name is a label; create the branch inside the
+  worktree before committing. Deleting the task removes the worktree, not a branch.
 - **Existing folders are never removed.** A task can run in a chosen folder, but deleting the task
   does not delete that folder; only a plugin-created worktree can be removed.
 - **No tag reordering.** This is a follow-up. Columns and tags are per project; reordering is not
@@ -482,7 +488,7 @@ Two common cases:
 
 ```bash
 npm run typecheck   # tsc --noEmit
-npm test            # vitest: 137 cases
+npm test            # vitest: 139 cases
 npm run build       # dist/gui-experimental.cjs
 npm run dev         # vite build --watch
 npm run coverage    # optional coverage run

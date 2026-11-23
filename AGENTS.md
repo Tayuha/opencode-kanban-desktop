@@ -79,7 +79,7 @@ npm run build
 npm audit --audit-level=high
 ```
 
-- Current suite: **137 tests**.
+- Current suite: **139 tests**.
 - Build twice and compare byte-for-byte when touching the bundle:
   `cp dist/gui-experimental.cjs /tmp/a.cjs && npm run build && cmp /tmp/a.cjs dist/gui-experimental.cjs`
 - The bundle must require only `effect`, `@opencode/plugin/gui`, `@opencode/plugin/rpc`,
@@ -167,7 +167,9 @@ restart. Never rewrite a released tag. The full runbook is [`docs/upgrading.md`]
 
 - No shell execution, tmux, terminal launching, process killing, or external network calls from the
   plugin.
-- Worktrees use OpenCode's native API only.
+- Worktrees use OpenCode's native API only. In 2.3.2, `worktree.create` runs
+  `git worktree add --detach <dir> <ref>`: `name` labels the directory, `branch` must be an
+  existing ref, and the API never creates a git branch. The plugin must not pretend otherwise.
 - No deleting sessions; no removing worktrees without user confirmation; never delete branches.
 - The board RPC reads and writes only `kanban-board.json`, `kanban-board.json.bak`, and
   `kanban-board.backup.json`; its `remove` method removes only those three fixed files after a

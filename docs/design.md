@@ -22,7 +22,7 @@
 |---|---|
 | Per-project SQLite file | One `Store.global` board map, keyed by canonical project folder |
 | Repository registry | OpenCode projects (`data.project.list`, `session.project`) |
-| `git worktree add/remove` | `client.worktree.create/remove/refresh` |
+| `git worktree add/remove` | `client.worktree.create/remove/refresh`; 2.3.2 creates a detached worktree from an existing ref |
 | tmux session per task | OpenCode session in the worktree directory |
 | tmux attach | `ctx.tabs.open` for an existing session; session create + composer prefill for a new task |
 | `tmux_status` polling | `client.session.active()` + `session.*` events + a safety poll |
@@ -247,9 +247,11 @@ own watch and local filters, but shares the per-project board map and preference
 2. If the directory is not a git repository, the worktree switch is disabled and
    `makeWorktree` is false.
 3. Validation checks the project, column, title-or-branch, git branch syntax, and duplicate
-   branches in the same project. Auto-prompt also requires a prompt.
+   branch labels in the same project. Auto-prompt also requires a prompt.
 4. With worktrees on:
-   `client.worktree.create({ projectID, branch, from })`.
+   `client.worktree.create({ projectID, name: branchLabel, branch: baseRef })`. OpenCode 2.3.2
+   runs `git worktree add --detach`; `branch` is the ref to detach at, `name` labels the directory,
+   and the API never creates a branch.
 5. `worktree.refresh` updates the app's project data. A refresh failure is ignored because the
    worktree was already created.
 6. The task is written to its project's board with the returned directory, and live state is
@@ -264,7 +266,8 @@ own watch and local filters, but shares the per-project board map and preference
 
 A worktree failure aborts before the task is written, so there is no half-created card. A session
 or prompt failure after the card is written leaves the card in place and reports a toast. The
-branch suggestion is random (`feature/<adjective>-<noun>-NNN`), not derived from the title.
+branch suggestion is random (`feature/<adjective>-<noun>-NNN`), not derived from the title; it is a
+worktree label until the user creates the git branch inside the worktree.
 
 ### Bind a task to a session
 
@@ -494,7 +497,7 @@ leaves the session bound and open and reports a toast.
 
 ## Testing
 
-The documented v0.1.1 suite has 137 vitest cases:
+The documented v0.1.1 suite has 139 vitest cases:
 
 | File | Cases | Focus |
 |---|---:|---|
@@ -504,6 +507,7 @@ The documented v0.1.1 suite has 137 vitest cases:
 | `model/projects.test.ts` | 10 | names, sort/dedupe, same-folder ids, routed fallback, lookups |
 | `model/boards.test.ts` | 11 | project keys, lookup/write immutability, migration split, project scoping, board folders |
 | `model/select.test.ts` | 7 | text/tag filters, server scope, column/archive selection, neighbours, status keys |
+| `data/actions.test.ts` | 2 | worktree payload: base ref, sanitized name, blank fallbacks |
 | `data/live.test.ts` | 8 | derived live state, server-scoped tasks, pinned-session hydration, archived pins, deleted-pin reporting, missing-pin isolation, running→idle callback, stale fallback with a fake client |
 | `server/board-file.test.ts` | 11 | read/write/remove, missing/invalid/oversized/aborted, `.bak`, separate backup |
 | `definition.test.ts` | 3 | store declaration, key copy, non-empty copy |

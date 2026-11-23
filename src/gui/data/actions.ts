@@ -12,15 +12,23 @@ export type BranchList = {
 export async function createWorktree(
   client: OpenCodeClient,
   projectID: string,
-  branch: string,
+  name: string,
   base?: string,
   signal?: AbortSignal,
 ): Promise<string> {
+  // OpenCode 2.3.2 runs `git worktree add --detach <dir> <ref>` and never creates a
+  // branch. `name` labels the worktree directory; `base` must be an existing ref.
+  const directoryName = name
+    .trim()
+    .replace(/[^a-zA-Z0-9._-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60)
+
   const info = await client.worktree.create(
     {
       projectID,
-      branch,
-      from: base?.trim() || undefined,
+      branch: base?.trim() || undefined,
+      name: directoryName || undefined,
     },
     { signal },
   )
