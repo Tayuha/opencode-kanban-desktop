@@ -512,6 +512,7 @@ and `npm audit --audit-level=high`.
 
 ## Documentation
 
+- [`AGENTS.md`](AGENTS.md) — instructions for AI agents: setup, upgrades, data, and release rules
 - [`docs/design.md`](docs/design.md) — architecture, data model, lifecycle, failure handling, and the TUI mapping
 - [`docs/board-file.md`](docs/board-file.md) — `kanban-board.json` format, export/reload semantics, backup and recovery
 - [`docs/upgrading.md`](docs/upgrading.md) — release process, upgrades, data migration, and rollback

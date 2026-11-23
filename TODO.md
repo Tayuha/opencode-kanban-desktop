@@ -114,6 +114,7 @@ Implemented and covered by the 122 automated tests:
 - [x] Help key-column overlap fixed and verified in Desktop (2026-11-20)
 - [x] Completion notifications verified in Desktop (2026-11-20)
 - [x] Upgrade/release plan documented in `docs/upgrading.md` (2026-11-23)
+- [x] AI agent guide documented in `AGENTS.md` (2026-11-23)
 
 ## P1 — follow-ups
 
