@@ -18,7 +18,7 @@ import {
 import type { definition, StoredPrefs } from "./definition.ts"
 import type { CreateTaskArgs, KanbanServices } from "./api.ts"
 import type { OpenMode } from "./model/types.ts"
-import type { Task } from "./model/types.ts"
+import type { Board, Task } from "./model/types.ts"
 import {
   archiveTask as archiveTaskModel,
   bindSession,
@@ -42,6 +42,17 @@ import {
   updateTask as updateTaskModel,
 } from "./model/board.ts"
 import { findProject, mergeProject, projectForSession, projectRows } from "./model/projects.ts"
+import {
+  boardDirectory,
+  boardForProject,
+  boardIn,
+  boardKeyFor,
+  findTaskIn,
+  projectKey,
+  scopeBoardToProject,
+  splitLegacyBoard,
+  withBoard,
+} from "./model/boards.ts"
 import { createLiveBoard } from "./data/live.ts"
 import { createWorktree, ensureSessionKnown, listBranches, removeWorktree, startSession, vcsChanges } from "./data/actions.ts"
 import { BoardWorkspace, KanbanPanel } from "./panel.tsx"
@@ -97,7 +108,7 @@ function FullBoardDialog(props: {
 function KanbanSettings() {
   const ctx = usePlugin<typeof definition>()
   const prefs = () => ctx.stores.prefs.value
-  const board = () => ctx.stores.board.value
+  const board = () => boardIn(ctx.stores.boards.value, prefs().lastBoardKey)
   const save = (patch: Partial<StoredPrefs>) => ctx.stores.prefs.set({ ...prefs(), ...patch })
 
   const alignmentOptions = (): { value: "fit" | "scroll"; label: string }[] => [
@@ -135,6 +146,7 @@ function KanbanSettings() {
       danger: true,
     })
     if (!ok) return
+    ctx.stores.boards.set({})
     ctx.stores.board.set(defaultBoard())
     ctx.toast.show({ variant: "success", title: ctx.t("settings.reset.done") })
   }
@@ -317,7 +329,7 @@ function KanbanSettings() {
 }
 
 export const setup: Plugin.Setup<typeof definition> = (ctx) => {
-  const board = () => ctx.stores.board.value
+  const boards = () => ctx.stores.boards.value
   const prefs = () => ctx.stores.prefs.value
   const [selectedTaskID, setSelectedTaskID] = createSignal<string | undefined>()
   const [searchPulse, setSearchPulse] = createSignal(0)
@@ -325,20 +337,121 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
   const notifiedSessions = new Set<string>()
   const pendingPrompts = new Map<string, string>()
 
+  const notify = (variant: "default" | "success" | "error", title: string, description?: string) => {
+    ctx.toast.show({ variant, title, description })
+  }
+
+  const projectBoard = (root: string | undefined, projectID?: string) =>
+    boardForProject(boards(), root, projectID)
+
+  const exportTimers = new Map<string, ReturnType<typeof setTimeout>>()
+  const exportDirs = new Map<string, string>()
+  const written = new Map<string, string>()
+  const fileBaselines = new Map<string, string>()
+  const exportQueue: string[] = []
+  let exportingNow = false
+  let lastAutoError: string | undefined
+
+  for (const [key, value] of Object.entries(boards())) {
+    written.set(key, boardKey(value))
+  }
+
+  const scheduleExport = (key: string) => {
+    if (ctx.stores.prefs.value.autoExport === false) return
+    const timer = exportTimers.get(key)
+    if (timer) clearTimeout(timer)
+    exportTimers.set(
+      key,
+      setTimeout(() => {
+        exportTimers.delete(key)
+        if (!exportQueue.includes(key)) exportQueue.push(key)
+        void runExports()
+      }, 1500),
+    )
+  }
+
+  const runExports = async () => {
+    if (exportingNow) return
+    exportingNow = true
+    try {
+      while (exportQueue.length > 0) {
+        const key = exportQueue.shift()!
+        await exportKey(key)
+      }
+    } finally {
+      exportingNow = false
+    }
+  }
+
+  const exportKey = async (key: string) => {
+    if (ctx.stores.prefs.value.autoExport === false) return
+    const directory = exportDirs.get(key)
+    if (!directory) return
+    const snapshotBoard = boards()[key]
+    if (!snapshotBoard) return
+    const snapshot = boardKey(snapshotBoard)
+    if (snapshot === written.get(key)) return
+    try {
+      const json = JSON.stringify(snapshotBoard, null, 2) + "\n"
+      await ctx.client.rpc(KanbanBoard).save({ directory, json })
+      written.set(key, snapshot)
+      fileBaselines.set(key, json)
+      lastAutoError = undefined
+    } catch (error) {
+      const message = errorText(error)
+      if (message !== lastAutoError) {
+        lastAutoError = message
+        const type = rpcErrorType(error)
+        notify(
+          "error",
+          type === "rpc.method_not_found" || type === "rpc.unavailable"
+            ? ctx.t("toast.boardReloadUnavailable")
+            : ctx.t("toast.autoExportFailed"),
+          message,
+        )
+      }
+    }
+  }
+
+  /** Writes one project's board and schedules its own auto-export. */
+  const saveBoard = (root: string | undefined, next: Board, projectID?: string) => {
+    const key = boardKeyFor(boards(), root, projectID)
+    if (!key) return
+    if (boardKey(next) === written.get(key) && boards()[key] && sameBoard(boards()[key]!, next)) return
+    ctx.stores.boards.set(withBoard(boards(), key, next))
+    const directory = boardDirectory(ctx.stores.prefs.value, key, root ?? "")
+    if (directory) exportDirs.set(key, directory)
+    scheduleExport(key)
+  }
+
   const live = createLiveBoard({
     debounceMs: () => 400,
     pollMs: () => ctx.stores.prefs.value.pollMs,
     onMissingPin: (event) => {
       const ids = new Set(event.taskIDs)
       let cleared = false
-      let next = board()
-      for (const task of next.tasks) {
-        if (!ids.has(task.id) || task.sessionID !== event.sessionID) continue
-        next = bindSession(next, task.id, undefined)
-        cleared = true
+      let nextMap = boards()
+      const touched: string[] = []
+      for (const [key, entry] of Object.entries(nextMap)) {
+        let next = entry
+        for (const task of entry.tasks) {
+          if (!ids.has(task.id) || task.sessionID !== event.sessionID) continue
+          next = bindSession(next, task.id, undefined)
+          cleared = true
+        }
+        if (next !== entry) {
+          nextMap = withBoard(nextMap, key, next)
+          touched.push(key)
+        }
       }
       if (!cleared) return
-      ctx.stores.board.set(next)
+      ctx.stores.boards.set(nextMap)
+      for (const key of touched) {
+        if (!key.startsWith("id:")) {
+          exportDirs.set(key, boardDirectory(ctx.stores.prefs.value, key, key))
+        }
+        scheduleExport(key)
+      }
       ctx.toast.show({ variant: "default", title: ctx.t("toast.sessionReleased") })
     },
     onTransition: (event) => {
@@ -402,7 +515,11 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
       notify("default", ctx.t("toast.alreadyLinked"))
       return false
     }
-    ctx.stores.board.set(bindSession(board(), task.id, sessionID, Date.now(), server.id))
+    saveBoard(
+      task.projectRoot,
+      bindSession(projectBoard(task.projectRoot, task.projectID), task.id, sessionID, Date.now(), server.id),
+      task.projectID,
+    )
     live.invalidate(server.id, task.projectID)
     notify("success", ctx.t("toast.sessionLinked", { title: sessionTitle(server, sessionID) }))
     return true
@@ -421,20 +538,21 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
     return projectForSession({ projectID, directory: session.directory, project: session.project })
   }
 
-  const notify = (variant: "default" | "success" | "error", title: string, description?: string) => {
-    ctx.toast.show({ variant, title, description })
-  }
-
   const undoArchive = (task: Task) => {
-    const current = board().tasks.find((item) => item.id === task.id)
+    const current = projectBoard(task.projectRoot, task.projectID).tasks.find((item) => item.id === task.id)
     if (!current?.archived) return
-    ctx.stores.board.set(restoreTaskModel(board(), task.id))
+    saveBoard(
+      task.projectRoot,
+      restoreTaskModel(projectBoard(task.projectRoot, task.projectID), task.id),
+      task.projectID,
+    )
     live.invalidate()
   }
 
   const undoDelete = (task: Task) => {
-    if (board().tasks.some((item) => item.id === task.id)) return
-    ctx.stores.board.set(restoreDeletedTask(board(), task))
+    const current = projectBoard(task.projectRoot, task.projectID)
+    if (current.tasks.some((item) => item.id === task.id)) return
+    saveBoard(task.projectRoot, restoreDeletedTask(current, task), task.projectID)
     live.invalidate()
   }
 
@@ -448,22 +566,35 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
     })
   }
 
-  const normalized = normalizeBoard(ctx.stores.board.value)
-  if (!sameBoard(normalized, ctx.stores.board.value)) {
-    ctx.stores.board.set(normalized)
+  // v0.1.1 stored one global board. Split it once, then leave the global store empty.
+  const legacy = normalizeBoard(ctx.stores.board.value)
+  let boardMap = boards()
+  let migrated = false
+  if (Object.keys(boardMap).length === 0 && legacy.tasks.length > 0) {
+    const split = splitLegacyBoard(legacy)
+    if (Object.keys(split).length > 0) {
+      ctx.stores.boards.set(split)
+      boardMap = split
+      migrated = true
+    }
   }
+  if (legacy.tasks.length > 0) ctx.stores.board.set(defaultBoard())
 
-  let lastWritten = boardKey(normalized)
-  let lastBoard = lastWritten
-  let lastFile: string | undefined
-  let autoTimer: ReturnType<typeof setTimeout> | undefined
-  let autoInFlight = false
-  let autoAgain = false
-  let lastAutoError: string | undefined
+  // Repair hand-edited or older per-project boards once per mount.
+  let repaired = boardMap
+  for (const [key, value] of Object.entries(boardMap)) {
+    const next = normalizeBoard(value)
+    if (!sameBoard(next, value)) repaired = withBoard(repaired, key, next)
+  }
+  if (repaired !== boardMap) {
+    ctx.stores.boards.set(repaired)
+    boardMap = repaired
+  }
+  for (const [key, value] of Object.entries(boardMap)) written.set(key, boardKey(value))
+
   let reloadTimer: ReturnType<typeof setInterval> | undefined
-  let reloadKey: string | undefined
   let reloadPolling = false
-  let reloadConflict = false
+  const conflicts = new Set<string>()
 
   const autoTarget = () => {
     const session = ctx.sessions.current()
@@ -475,76 +606,18 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
     )
   }
 
-  const autoExport = async () => {
-    if (ctx.stores.prefs.value.autoExport === false) return
+  // After the one-time split, make the selected project's file project-scoped promptly.
+  createEffect(() => {
+    if (!migrated) return
     const session = ctx.sessions.current()
     const project = autoTarget()
     if (!session || !project) return
-    const snapshot = boardKey(ctx.stores.board.value)
-    if (snapshot === lastWritten) return
-    if (autoInFlight) {
-      autoAgain = true
-      return
-    }
-    autoInFlight = true
-    try {
-      const json = JSON.stringify(ctx.stores.board.value, null, 2) + "\n"
-      await ctx.client.rpc(KanbanBoard).save({
-        directory: project.root,
-        json,
-      })
-      lastWritten = snapshot
-      lastBoard = snapshot
-      lastFile = json
-      lastAutoError = undefined
-    } catch (error) {
-      const message = errorText(error)
-      if (message !== lastAutoError) {
-        lastAutoError = message
-        const type = rpcErrorType(error)
-        notify(
-          "error",
-          type === "rpc.method_not_found" || type === "rpc.unavailable"
-            ? ctx.t("toast.boardReloadUnavailable")
-            : ctx.t("toast.autoExportFailed"),
-          message,
-        )
-      }
-    } finally {
-      autoInFlight = false
-      if (autoAgain) {
-        autoAgain = false
-        scheduleAuto()
-      }
-    }
-  }
-
-  const scheduleAuto = () => {
-    if (autoTimer) clearTimeout(autoTimer)
-    autoTimer = setTimeout(() => {
-      autoTimer = undefined
-      void autoExport()
-    }, 1500)
-  }
-
-  createEffect(() => {
-    const state = boardKey(ctx.stores.board.value)
-    if (state === lastWritten || ctx.stores.prefs.value.autoExport === false) return
-    scheduleAuto()
-  })
-
-  createEffect(() => {
-    if (!ctx.sessions.current()) return
-    if (boardKey(ctx.stores.board.value) === lastWritten) return
-    if (ctx.stores.prefs.value.autoExport === false) return
-    scheduleAuto()
-  })
-
-  createEffect(() => {
-    if (!ctx.stores.prefs.value.lastProjectID) return
-    if (boardKey(ctx.stores.board.value) === lastWritten) return
-    if (ctx.stores.prefs.value.autoExport === false) return
-    scheduleAuto()
+    const key = boardKeyFor(boards(), project.root, project.id)
+    if (!key || !boards()[key]) return
+    migrated = false
+    exportDirs.set(key, boardDirectory(ctx.stores.prefs.value, key, project.root))
+    written.delete(key)
+    scheduleExport(key)
   })
 
   const pollExternal = async () => {
@@ -554,32 +627,29 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
     const project = autoTarget()
     if (!session || !project) return
 
-    const key = `${session.server.id}\n${project.id}\n${project.root}`
-    if (key !== reloadKey) {
-      reloadKey = key
-      lastFile = undefined
-      lastBoard = boardKey(ctx.stores.board.value)
-      reloadConflict = false
-    }
+    const key = boardKeyFor(boards(), project.root, project.id)
+    if (!key) return
+    const directory = boardDirectory(ctx.stores.prefs.value, key, project.root)
 
     reloadPolling = true
     try {
-      const response = (await ctx.client.rpc(KanbanBoard).load({
-        directory: project.root,
-      })) as { json: string }
+      const response = (await ctx.client.rpc(KanbanBoard).load({ directory })) as { json: string }
       const fileJson = response.json
+      const previous = fileBaselines.get(key)
 
-      if (lastFile === undefined) {
-        lastFile = fileJson
-        lastBoard = boardKey(ctx.stores.board.value)
+      if (previous === undefined) {
+        fileBaselines.set(key, fileJson)
+        if (!written.has(key)) written.set(key, boardKey(projectBoard(project.root, project.id)))
         return
       }
-      if (fileJson === lastFile) return
+      if (fileJson === previous) return
 
-      const current = boardKey(ctx.stores.board.value)
-      if (current !== lastBoard) {
-        if (!reloadConflict) {
-          reloadConflict = true
+      const before = projectBoard(project.root, project.id)
+      const beforeKey = boardKey(before)
+      const baseline = written.get(key)
+      if (baseline !== undefined && beforeKey !== baseline) {
+        if (!conflicts.has(key)) {
+          conflicts.add(key)
           ctx.toast.show({ variant: "default", title: ctx.t("toast.boardExternalConflict") })
         }
         return
@@ -593,13 +663,11 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
       }
       if (!isBoardLike(parsed)) return
 
-      const next = mergeSessionBindings(normalizeBoard(parsed), board())
-      const before = boardKey(ctx.stores.board.value)
+      const next = mergeSessionBindings(scopeBoardToProject(parsed, key, project.id), before)
       const after = boardKey(next)
-      lastFile = fileJson
-      lastBoard = after
-      reloadConflict = false
-      if (after === before) {
+      fileBaselines.set(key, fileJson)
+      conflicts.delete(key)
+      if (after === beforeKey) {
         ctx.toast.show({
           variant: "default",
           title: ctx.t("toast.boardFileNoChange"),
@@ -607,7 +675,8 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
         })
         return
       }
-      ctx.stores.board.set(next)
+      ctx.stores.boards.set(withBoard(boards(), key, next))
+      written.set(key, after)
       live.invalidate()
       ctx.toast.show({ variant: "default", title: ctx.t("toast.boardAutoReloaded") })
     } catch {
@@ -633,7 +702,8 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
   })
 
   onCleanup(() => {
-    if (autoTimer) clearTimeout(autoTimer)
+    for (const timer of exportTimers.values()) clearTimeout(timer)
+    exportTimers.clear()
     if (reloadTimer) clearInterval(reloadTimer)
   })
 
@@ -675,21 +745,25 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
       ))
     },
 
-    openColumnsDialog: (projectID, projectName) => {
+    openColumnsDialog: (projectID, projectName, projectRoot) => {
       ctx.dialogs.open((dialog) => (
         <ColumnsDialog
           projectID={projectID}
           projectName={projectName}
+          projectRoot={projectRoot}
+          services={services}
           onClose={dialog.close}
         />
       ))
     },
 
-    openTagsDialog: (projectID, projectName) => {
+    openTagsDialog: (projectID, projectName, projectRoot) => {
       ctx.dialogs.open((dialog) => (
         <TagsDialog
           projectID={projectID}
           projectName={projectName}
+          projectRoot={projectRoot}
+          services={services}
           onClose={dialog.close}
         />
       ))
@@ -697,15 +771,20 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
 
     projects: projectsOf,
     projectFor,
+    boardFor: projectBoard,
+    saveBoard,
 
-    target: (session, projectID) => ({
-      serverID: session.server.id,
-      projectID,
-      client: () => session.server.client,
-      data: () => session.server.data,
-      tasks: () => ctx.stores.board.value.tasks,
-      projectName: () => findProject(projectsOf(session), projectID)?.name ?? projectID,
-    }),
+    target: (session, projectID) => {
+      const project = findProject(projectsOf(session), projectID)
+      return {
+        serverID: session.server.id,
+        projectID,
+        client: () => session.server.client,
+        data: () => session.server.data,
+        tasks: () => projectBoard(project?.root, projectID).tasks,
+        projectName: () => project?.name ?? projectID,
+      }
+    },
 
     createTask: async (session, input: CreateTaskArgs) => {
       const project = findProject(projectsOf(session), input.projectID)
@@ -728,7 +807,8 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
       }
 
       const id = newID("task")
-      const next = createTaskModel(board(), {
+      const currentBoard = projectBoard(project.root, project.id)
+      const next = createTaskModel(currentBoard, {
         id,
         title: input.title,
         branch: input.branch,
@@ -743,7 +823,7 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
         directory,
         notes: input.notes,
       })
-      ctx.stores.board.set(next)
+      saveBoard(project.root, next, project.id)
       const task = next.tasks.find((item) => item.id === id)!
       live.invalidate(session.server.id, project.id)
 
@@ -764,8 +844,16 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
               "",
               ctx.signal,
             )
-            ctx.stores.board.set(
-              bindSession(board(), task.id, started.id, Date.now(), session.server.id),
+            saveBoard(
+              task.projectRoot,
+              bindSession(
+                projectBoard(task.projectRoot, task.projectID),
+                task.id,
+                started.id,
+                Date.now(),
+                session.server.id,
+              ),
+              task.projectID,
             )
             live.invalidate(session.server.id, task.projectID)
             const initial = input.prompt || prefs().initialPrompt
@@ -830,7 +918,17 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
         if (mode === "reuse" && bound) {
           if (!task.sessionID) {
             // Turn a worktree discovery into an explicit, persisted pin on first open.
-            ctx.stores.board.set(bindSession(board(), task.id, bound, Date.now(), session.server.id))
+            saveBoard(
+              task.projectRoot,
+              bindSession(
+                projectBoard(task.projectRoot, task.projectID),
+                task.id,
+                bound,
+                Date.now(),
+                session.server.id,
+              ),
+              task.projectID,
+            )
             live.invalidate(session.server.id, task.projectID)
           }
           await ensureSessionKnown(session.server.data, bound)
@@ -848,7 +946,17 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
           "",
           ctx.signal,
         )
-        ctx.stores.board.set(bindSession(board(), task.id, started.id, Date.now(), session.server.id))
+        saveBoard(
+          task.projectRoot,
+          bindSession(
+            projectBoard(task.projectRoot, task.projectID),
+            task.id,
+            started.id,
+            Date.now(),
+            session.server.id,
+          ),
+          task.projectID,
+        )
         live.invalidate(session.server.id, task.projectID)
         ctx.tabs.open({ server: session.server.id, id: started.id }, { focus: true })
         notify(
@@ -881,7 +989,17 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
           prompt ?? prefs().initialPrompt,
           ctx.signal,
         )
-        ctx.stores.board.set(bindSession(board(), task.id, started.id, Date.now(), session.server.id))
+        saveBoard(
+          task.projectRoot,
+          bindSession(
+            projectBoard(task.projectRoot, task.projectID),
+            task.id,
+            started.id,
+            Date.now(),
+            session.server.id,
+          ),
+          task.projectID,
+        )
         live.invalidate(session.server.id, task.projectID)
         ctx.tabs.open({ server: session.server.id, id: started.id }, { focus: true })
         if (started.promptError) {
@@ -956,7 +1074,11 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
 
     unlinkTaskSession: (task) => {
       if (!task.sessionID) return
-      ctx.stores.board.set(bindSession(board(), task.id, undefined))
+      saveBoard(
+        task.projectRoot,
+        bindSession(projectBoard(task.projectRoot, task.projectID), task.id, undefined),
+        task.projectID,
+      )
       live.invalidate()
       notify("success", ctx.t("toast.sessionUnlinked"), task.title)
     },
@@ -993,7 +1115,8 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
           )
         }
       }
-      ctx.stores.board.set(deleteTaskModel(board(), task.id))
+      const currentBoard = projectBoard(task.projectRoot, task.projectID)
+      saveBoard(task.projectRoot, deleteTaskModel(currentBoard, task.id), task.projectID)
       live.invalidate()
       if (selectedTaskID() === task.id) setSelectedTaskID(undefined)
       const deleted = task.serverID ? task : { ...task, serverID: session.server.id }
@@ -1014,8 +1137,9 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
 
     archiveTask: (task: Task) => {
       const current = ctx.sessions.current()
-      const next = current ? claimTask(board(), task.id, current.server.id) : board()
-      ctx.stores.board.set(archiveTaskModel(next, task.id))
+      const base = projectBoard(task.projectRoot, task.projectID)
+      const next = current ? claimTask(base, task.id, current.server.id) : base
+      saveBoard(task.projectRoot, archiveTaskModel(next, task.id), task.projectID)
       live.invalidate()
       if (selectedTaskID() === task.id) setSelectedTaskID(undefined)
       showUndo(ctx.t("toast.taskArchived"), task, () => undoArchive(task))
@@ -1023,29 +1147,32 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
 
     restoreTask: (task: Task) => {
       const current = ctx.sessions.current()
-      const next = current ? claimTask(board(), task.id, current.server.id) : board()
-      ctx.stores.board.set(restoreTaskModel(next, task.id))
+      const base = projectBoard(task.projectRoot, task.projectID)
+      const next = current ? claimTask(base, task.id, current.server.id) : base
+      saveBoard(task.projectRoot, restoreTaskModel(next, task.id), task.projectID)
       live.invalidate()
       notify("success", ctx.t("action.restore"), task.title)
     },
 
     updateTask: (task: Task, patch) => {
       const current = ctx.sessions.current()
-      const next = current ? claimTask(board(), task.id, current.server.id) : board()
-      ctx.stores.board.set(updateTaskModel(next, task.id, patch))
+      const base = projectBoard(task.projectRoot, task.projectID)
+      const next = current ? claimTask(base, task.id, current.server.id) : base
+      saveBoard(task.projectRoot, updateTaskModel(next, task.id, patch), task.projectID)
       live.invalidate()
     },
 
     moveTask: (task: Task, direction: "left" | "right" | "up" | "down") => {
       const current = ctx.sessions.current()
-      const base = current ? claimTask(board(), task.id, current.server.id) : board()
+      const base = projectBoard(task.projectRoot, task.projectID)
+      const claimed = current ? claimTask(base, task.id, current.server.id) : base
       const next =
         direction === "left"
-          ? moveTaskToCategory(base, task.id, -1)
+          ? moveTaskToCategory(claimed, task.id, -1)
           : direction === "right"
-            ? moveTaskToCategory(base, task.id, 1)
-            : moveTaskBy(base, task.id, direction === "up" ? -1 : 1)
-      ctx.stores.board.set(next)
+            ? moveTaskToCategory(claimed, task.id, 1)
+            : moveTaskBy(claimed, task.id, direction === "up" ? -1 : 1)
+      saveBoard(task.projectRoot, next, task.projectID)
       live.invalidate()
     },
 
@@ -1057,16 +1184,19 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
         notify("error", ctx.t("toast.noProject"))
         return
       }
+      const key = boardKeyFor(boards(), project.root, project.id)
+      const board = projectBoard(project.root, project.id)
+      const directory = boardDirectory(prefs(), key, project.root)
       try {
-        const snapshot = boardKey(ctx.stores.board.value)
-        const json = JSON.stringify(ctx.stores.board.value, null, 2) + "\n"
+        const snapshot = boardKey(board)
+        const json = JSON.stringify(board, null, 2) + "\n"
         const response = (await ctx.client.rpc(KanbanBoard).save({
-          directory: project.root,
+          directory,
           json,
         })) as { path: string; backupPath?: string }
-        lastWritten = snapshot
-        lastBoard = snapshot
-        lastFile = json
+        written.set(key, snapshot)
+        fileBaselines.set(key, json)
+        exportDirs.set(key, directory)
         lastAutoError = undefined
         notify(
           "success",
@@ -1091,7 +1221,11 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
         notify("error", ctx.t("toast.noProject"))
         return
       }
-      if (ctx.stores.board.value.tasks.length > 0) {
+      const key = boardKeyFor(boards(), project.root, project.id)
+      const currentBoard = projectBoard(project.root, project.id)
+      const directory = boardDirectory(prefs(), key, project.root)
+
+      if (currentBoard.tasks.length > 0) {
         const ok = await ctx.dialogs.confirm({
           title: ctx.t("board.reload.confirm.title"),
           description: ctx.t("board.reload.confirm.body"),
@@ -1102,8 +1236,8 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
 
         try {
           await ctx.client.rpc(KanbanBoard).save({
-            directory: project.root,
-            json: JSON.stringify(ctx.stores.board.value, null, 2) + "\n",
+            directory,
+            json: JSON.stringify(currentBoard, null, 2) + "\n",
             target: "backup",
           })
         } catch (error) {
@@ -1119,16 +1253,16 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
 
       try {
         const response = (await ctx.client.rpc(KanbanBoard).load({
-          directory: project.root,
+          directory,
         })) as { path: string; json: string }
         const parsed: unknown = JSON.parse(response.json)
         if (!isBoardLike(parsed)) throw new Error(ctx.t("toast.boardReloadInvalid"))
-        const next = mergeSessionBindings(normalizeBoard(parsed), board())
-        ctx.stores.board.set(next)
+        const next = mergeSessionBindings(scopeBoardToProject(parsed, key, project.id), currentBoard)
+        ctx.stores.boards.set(withBoard(boards(), key, next))
         live.invalidate()
-        lastFile = response.json
-        lastBoard = boardKey(next)
-        reloadConflict = false
+        fileBaselines.set(key, response.json)
+        written.set(key, boardKey(next))
+        conflicts.delete(key)
         notify(
           "success",
           ctx.t("toast.boardReloaded"),
@@ -1137,7 +1271,7 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
       } catch (error) {
         const type = rpcErrorType(error)
         if (type === "not_found") {
-          notify("error", ctx.t("toast.boardReloadMissing"), project.root)
+          notify("error", ctx.t("toast.boardReloadMissing"), directory)
         } else if (type === "invalid") {
           notify("error", ctx.t("toast.boardReloadInvalid"), errorText(error))
         } else if (type === "rpc.method_not_found" || type === "rpc.unavailable") {
@@ -1145,6 +1279,65 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
         } else {
           notify("error", ctx.t("toast.boardReloadFailed"), errorText(error))
         }
+      }
+    },
+
+    chooseBoardFolder: async (session, projectID) => {
+      const project = findProject(projectsOf(session), projectID)
+      if (!project) {
+        notify("error", ctx.t("toast.noProject"))
+        return
+      }
+      if (!ctx.desktop) {
+        notify("error", ctx.t("boardFolder.unavailable"))
+        return
+      }
+      const key = boardKeyFor(boards(), project.root, project.id)
+      const current = prefs().boardDirs?.[key]
+      try {
+        const choice = await ctx.dialogs.select<"root" | "pick">({
+          title: ctx.t("boardFolder.title"),
+          placeholder: ctx.t("boardFolder.placeholder"),
+          current: current ? "pick" : "root",
+          options: [
+            {
+              value: "root",
+              title: ctx.t("boardFolder.root"),
+              description: project.root,
+              group: ctx.t("boardFolder.group"),
+            },
+            {
+              value: "pick",
+              title: ctx.t("boardFolder.pick"),
+              description: current ?? ctx.t("boardFolder.pick.description"),
+              group: ctx.t("boardFolder.group"),
+            },
+          ],
+        })
+        if (!choice) return
+
+        let directory: string | undefined
+        if (choice === "pick") {
+          const picked = await ctx.desktop.pick({
+            directory: true,
+            title: ctx.t("boardFolder.pick"),
+          })
+          directory = picked[0]
+          if (!directory) return
+        }
+
+        const boardDirs = { ...(prefs().boardDirs ?? {}) }
+        if (directory) boardDirs[key] = directory
+        else delete boardDirs[key]
+        ctx.stores.prefs.set({ ...prefs(), boardDirs })
+        exportDirs.set(key, directory ?? project.root)
+        notify(
+          "success",
+          directory ? ctx.t("boardFolder.saved") : ctx.t("boardFolder.reset"),
+          directory ?? project.root,
+        )
+      } catch (error) {
+        notify("error", ctx.t("boardFolder.failed"), errorText(error))
       }
     },
 
@@ -1193,10 +1386,10 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
   const selectedTask = (): Task | undefined => {
     const id = selectedTaskID()
     if (!id) return undefined
-    const task = board().tasks.find((item) => item.id === id)
+    const found = findTaskIn(boards(), id)
     const current = ctx.sessions.current()
-    if (task?.serverID && current && task.serverID !== current.server.id) return undefined
-    return task
+    if (found?.task.serverID && current && found.task.serverID !== current.server.id) return undefined
+    return found?.task
   }
 
   const requireTask = (): Task | undefined => {
@@ -1321,7 +1514,7 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
       section: "session",
       run: () => {
         const target = requireSession()
-        if (target) services.openColumnsDialog(target.project.id, target.project.name)
+        if (target) services.openColumnsDialog(target.project.id, target.project.name, target.project.root)
       },
     }),
   )
@@ -1336,7 +1529,7 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
       section: "session",
       run: () => {
         const target = requireSession()
-        if (target) services.openTagsDialog(target.project.id, target.project.name)
+        if (target) services.openTagsDialog(target.project.id, target.project.name, target.project.root)
       },
     }),
   )
@@ -1631,7 +1824,7 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
         const project = projectFor(input.session)
         if (!project) return undefined
         const snapshot = live.peek(input.session.server.id, project.id)
-        const tasks = ctx.stores.board.value.tasks.filter(
+        const tasks = projectBoard(project.root, project.id).tasks.filter(
           (task) =>
             task.projectID === project.id &&
             (!task.serverID || task.serverID === input.session.server.id) &&

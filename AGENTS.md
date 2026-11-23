@@ -79,7 +79,7 @@ npm run build
 npm audit --audit-level=high
 ```
 
-- Current suite: **122 tests**.
+- Current suite: **135 tests**.
 - Build twice and compare byte-for-byte when touching the bundle:
   `cp dist/gui-experimental.cjs /tmp/a.cjs && npm run build && cmp /tmp/a.cjs dist/gui-experimental.cjs`
 - The bundle must require only `effect`, `@opencode/plugin/gui`, `@opencode/plugin/rpc`,
@@ -95,10 +95,11 @@ src/rpc.ts                   board RPC contract
 src/server/board-file.ts     fixed-filename, atomic board read/write, 5 MB cap, .bak
 src/gui.tsx                  GUI entry
 src/gui/definition.ts        stores, schemas, i18n
-src/gui/window.tsx           services, commands, settings, notifications, auto-sync
+src/gui/window.tsx           services, commands, settings, notifications, per-project auto-sync
 src/gui/panel.tsx            mounted panel/workspace
 src/gui/components/*         board, detail, archive, help, dialogs
 src/gui/model/*              pure, tested data logic
+src/gui/model/boards.ts      per-project board map, migration, file-folder choice
 src/gui/data/live.ts         live session registry, hydration, transitions
 src/gui/data/actions.ts      worktree/session/VCS actions
 src/gui/style.ts             scoped CSS
@@ -106,29 +107,34 @@ src/gui/style.ts             scoped CSS
 
 The `model/` layer must stay SDK-free and unit-tested. Keep GUI code out of it. Keep server and GUI
 parts decoupled; the server RPC may only read/write fixed board filenames under the supplied
-absolute project root.
+absolute board folder.
 
 ## Board data and agent edits
 
 The authoritative board is Desktop plugin storage (`Store.global`), normally
 `~/.config/ai.opencode.desktop/drafts.sqlite` on Linux. `kanban-board.json` is a snapshot.
 
-- **While Desktop is running:** write board changes to `kanban-board.json` (or call the `save`
-  RPC). Auto-reload polls the last selected project every two seconds and applies the file when the
-  live board is clean. Direct writes to `drafts.sqlite` are invisible to the in-memory store and can
-  be overwritten.
+- **While Desktop is running:** write board changes to the active project's `kanban-board.json` (or
+  call the `save` RPC with its board folder). Auto-reload polls the last selected project every two
+  seconds and applies the file when that project's live board is clean. Direct writes to
+  `drafts.sqlite` are invisible to the in-memory store and can be overwritten.
 - **While Desktop is closed:** update plugin storage only if you are sure which installation and
   board row you are changing; otherwise edit the snapshot and let the user reload it.
-- Auto-export writes board changes after a 1.5 s debounce. `.bak` is the previous snapshot.
-- Auto-reload skips external changes when the live board has unsaved edits and shows a conflict
-  toast.
+- Auto-export writes each changed project's board after a 1.5 s debounce. `.bak` is the previous
+  snapshot.
+- Auto-reload skips external changes when that project's live board has unsaved edits and shows a
+  conflict toast.
 - Export before major board-schema work. Keep `kanban-board.json.bak` and a closed-Desktop copy of
   `drafts.sqlite` for recovery.
 - Board files contain titles, notes, branches, folder paths, and session IDs. Treat them as
   sensitive.
 - Existing folders and worktrees: only plugin-created worktrees may be removed, with confirmation.
   An existing `directory` is never removed; branches are never deleted.
-- Board data is per Desktop installation. Export/reload is whole-installation, not project-scoped.
+- Boards are stored one per canonical project folder in the `boards` store. Exports and reloads are
+  project-scoped: a file holds only that project's cards, columns, tags, and archive state. The
+  legacy global `board` store is read once during migration and then kept empty.
+- A project's board file defaults to its root. `prefs.boardDirs`, keyed by the same project key,
+  stores an optional override chosen with the panel's folder action.
 
 ## Upgrade and release rules
 
@@ -142,7 +148,8 @@ npm ci
 ```
 
 Then fully quit and reopen Desktop. The config path does not change. Patch releases normally need
-no data migration.
+no data migration; v0.1.2 is the exception (it splits the v0.1.1 global board, see
+[`docs/upgrading.md`](docs/upgrading.md)).
 
 Release process:
 
@@ -171,11 +178,12 @@ restart. Never rewrite a released tag. The full runbook is [`docs/upgrading.md`]
 
 ## Current open work
 
-- **Auto-sync board with kanban-board.json** — auto-export/auto-reload implemented; pending GUI
-  verification of K-44b–K-44e.
-- **Deduplicate project list by folder** — implemented and released in v0.1.1; pending final
-  switcher confirmation that the duplicate cache-stats row is gone.
+- **v0.1.2 staging** — per-project boards, project-scoped files, and the canonical no-change fix
+  are committed on `main`; the tag stays open until the user closes it.
+- **Per-project boards** — implemented; verify in Desktop that switching projects swaps the board,
+  that a snapshot contains only that project's tasks, and that the v0.1.1 board split preserved all
+  cards.
 - **Verify the worktree and session flow** — deferred; use the plugin repository or a throwaway git
   repo. See K-05/06/16/17/18 and K-20..22.
-- Still open for a full release: safe reload/recovery, screenshots/docs completion, custom icons
-  when the SDK exposes them, fresh-install smoke test, macOS/Windows testing.
+- Still open for a full release: screenshots/docs completion, custom icons when the SDK exposes
+  them, fresh-install smoke test, macOS/Windows testing.

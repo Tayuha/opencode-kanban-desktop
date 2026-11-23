@@ -5,6 +5,7 @@ import type { KanbanServices } from "../api.ts"
 import type { LiveTask, Task, VcsSummary } from "../model/types.ts"
 import { Progress, StatusDot } from "../components.tsx"
 import { hasManagedWorktree, taskTags } from "../model/board.ts"
+import { defaultBoard } from "../model/board.ts"
 import { statusLabelKey } from "../model/select.ts"
 import { baseName, formatCost, shortID, timeAgo } from "../format.ts"
 
@@ -50,7 +51,7 @@ export function DetailView(props: DetailProps) {
     ),
   )
 
-  const board = () => ctx.stores.board.value
+  const board = () => (props.task ? props.services.boardFor(props.task.projectRoot, props.task.projectID) : defaultBoard())
   const tags = () => (props.task ? taskTags(board(), props.task) : [])
   const locale = () => ctx.locale.locale()
   const status = () => props.live?.status ?? "none"

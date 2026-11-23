@@ -8,17 +8,19 @@ board; this file is the durable release view. The gate to run is
 - **Target:** local/private v0.1.x on OpenCode Desktop **2.3.2**
 - **Upgrade plan:** [`docs/upgrading.md`](docs/upgrading.md)
 - **Platform exercised:** Linux
-- **Last updated:** 2026-11-20
+- **Last updated:** 2026-11-23
 
 ## Current state
 
 > **v0.1.1** is a patch release over v0.1.0: it fixes duplicate project entries for the same folder. No board data migration is required. See [`CHANGELOG.md`](CHANGELOG.md).
 >
-> **v0.1.2 is open** but not tagged. Add changes under `Unreleased` in `CHANGELOG.md`; bump the package version and create the tag only when the release is closed.
+> **v0.1.2 is open** but not tagged. It adds docs, the canonical no-change fix, and per-project
+> boards/files with a one-time split of the v0.1.1 global board. Add changes under `Unreleased` in
+> `CHANGELOG.md`; bump the package version and create the tag only when the release is closed.
 
 Implemented and unit-tested:
 
-- One CommonJS GUI bundle; 124 tests; typecheck clean; deterministic build
+- One CommonJS GUI bundle; 135 tests; typecheck clean; deterministic build
 - Server part and board file RPC (load and save) with atomic writes
 - Board, columns, archive, search, keyboard and drag operations
 - Git worktrees and sessions through the OpenCode API
@@ -29,8 +31,9 @@ Implemented and unit-tested:
 - Completion notifications and composer pill
 - `kanban-board.json` export/reload with `.bak`, pre-reload backup, and binding preservation
 - Compact column mode (toggle, `C`, palette command, settings)
-- Per-project column sets with lazy copies of the shared defaults
-- Per-project tag sets with migration of existing shared tags
+- Per-project boards keyed by canonical folder, with a one-time split of the v0.1.1 global board
+- Per-project `kanban-board.json` files, project-scoped reload, and an optional board folder per project
+- Per-project columns and tags, each board storing its own set
 - Pinned task sessions are authoritative, hydrated by ID, persist across restarts, and clear on confirmed deletion
 - Undo toasts for archive and non-worktree delete
 - Server id recorded on tasks, with legacy claiming and server-scoped live/board state
@@ -91,11 +94,11 @@ Tick every item before tagging a release. Each maps to a card on the board.
 
 ## Done
 
-Implemented and covered by the 122 automated tests:
+Implemented and covered by the 135 automated tests:
 
 - [x] Bundle builds as one CommonJS file (`dist/gui-experimental.cjs`)
 - [x] `npm run typecheck` is clean
-- [x] `npm test` passes 124 cases
+- [x] `npm test` passes 135 cases
 - [x] Bundle requires only shared modules (`effect`, GUI, rpc, solid-js, solid-js/web)
 - [x] Server part loads; plugin id is `nmdra.kanban-desktop`
 - [x] Board file RPC (load/save), Export board, Reload board, and pre-reload backup
@@ -121,6 +124,9 @@ Implemented and covered by the 122 automated tests:
 - [x] Upgrade/release plan documented in `docs/upgrading.md` (2026-11-23)
 - [x] Documentation audited and expanded; AGENTS/upgrading/README/design/test docs current (2026-11-23)
 - [x] AI agent guide documented in `AGENTS.md` (2026-11-23)
+- [x] Per-project boards and project-scoped board files implemented; 135 tests pass (2026-11-23)
+- [ ] Per-project board split, project switching, and board-folder override verified in Desktop
+- [ ] v0.1.2 release closed, version bumped, changelog finalized, tag created
 
 ## P1 — follow-ups
 

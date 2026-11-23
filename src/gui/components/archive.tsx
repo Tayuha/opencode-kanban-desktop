@@ -10,6 +10,7 @@ import { baseName, timeAgo } from "../format.ts"
 type ArchiveProps = {
   session: MountedSession
   projectID: string
+  projectRoot: string
   serverID: string
   query: string
   tagIDs: readonly string[]
@@ -23,7 +24,7 @@ function errorText(error: unknown): string {
 export function ArchiveView(props: ArchiveProps) {
   const ctx = usePlugin<typeof definition>()
   const ui = ctx.ui
-  const board = () => ctx.stores.board.value
+  const board = () => props.services.boardFor(props.projectRoot, props.projectID)
   const tasks = () => visibleArchive(board(), props.projectID, props.query, props.tagIDs, props.serverID)
   const locationOf = (task: Task) =>
     task.directory ?? (hasManagedWorktree(task) ? task.worktreePath : undefined)

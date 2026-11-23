@@ -61,23 +61,24 @@ host. The server part is loaded by the local OpenCode server and exposes the boa
 
 Trust boundaries worth naming:
 
-- **Desktop plugin storage** is trusted local state. The board and preferences are `Store.global`
-  values. On this Linux installation they are backed by
+- **Desktop plugin storage** is trusted local state. The per-project board map and preferences are
+  `Store.global` values. On this Linux installation they are backed by
   `~/.config/ai.opencode.desktop/drafts.sqlite`. They are not encrypted by the plugin; OS file
   permissions and Desktop's storage protect them.
 - **The local OpenCode server** is trusted to provide sessions, projects, messages, worktrees, and
   VCS status. The plugin treats its responses as data, not instructions.
 - **The board file is untrusted input.** Reload checks JSON syntax and the board's outer shape,
-  then normalizes shared and per-project column sets, tags, colors, positions, duplicates, and task
-  tag IDs. It does not verify that a task's `projectID`, `projectRoot`, `worktreePath`, or
-  `sessionID` belongs to the selected project or to a live session. Those fields are later used as data: opening a task may
-  create a session in its stored `projectRoot`; deleting with worktree removal may send its
-  `worktreePath` to the worktree API after confirmation. Reload only files you trust.
+  scopes it to the selected project folder, then normalizes column sets, tags, colors, positions,
+  duplicates, and task tag IDs. It does not verify that a task's `projectID`, `projectRoot`,
+  `worktreePath`, or `sessionID` belongs to the selected project or to a live session. Those fields
+  are later used as data: opening a task may create a session in its stored `projectRoot`; deleting
+  with worktree removal may send its `worktreePath` to the worktree API after confirmation. Reload
+  only files you trust.
 - **The board-file RPC trusts its caller's directory.** It accepts an absolute directory, checks
   that it exists, and reads/writes only the fixed filenames there. It does not authenticate the
   caller beyond the local server's RPC surface. Any local client able to call the RPC could pass
   another existing absolute directory and create/replace those three filenames. The GUI always
-  passes the selected project's root.
+  passes the selected project's board folder (its root unless the user chose one).
 - **Exported board files are sensitive.** They contain task titles, notes, branches, worktree
   paths, project roots, and session IDs. Exporting into a git project can leave an untracked or
   modified file. Treat it like project metadata.
@@ -101,7 +102,7 @@ Writes:
   actions);
 - `data.session.sync` to make a session known to the app;
 - creating a session, prefilling its composer, opening a session tab (`ctx.tabs.open`);
-- `nmdra.kanban-desktop.board.save` writes `<project>/kanban-board.json`,
+- `nmdra.kanban-desktop.board.save` writes `<board folder>/kanban-board.json`,
   `kanban-board.json.bak`, or `kanban-board.backup.json` atomically (fixed filenames,
   5,000,000-byte cap);
 - its own board and preferences stores;
@@ -138,8 +139,8 @@ persist or transmit the rest.
   requires a second, explicit force confirmation that shows the server error.
 - Deleting a task does not stop its session. Removing a worktree does not delete its branch.
 - `Reset board data` has its own confirmation and never removes worktrees or sessions.
-- Reload confirms when the live board has any task, writes a pre-reload backup first, and cancels
-  if that backup fails.
+- Reload confirms when the selected project's board has any task, writes a pre-reload backup first,
+  and cancels if that backup fails.
 - Export writes atomically and aborts if the previous file cannot be preserved as `.bak`.
 - Reload normalizes imported data and rejects non-board shapes.
 - No credentials of its own.
@@ -149,12 +150,14 @@ persist or transmit the rest.
 
 - **Board and preferences:** Desktop `Store.global`, backed by
   `~/.config/ai.opencode.desktop/drafts.sqlite` on Linux. In this build they are `state` rows named
-  `opencode.global.dat` / `plugin.nmdra.kanban-desktop.board` and
-  `plugin.nmdra.kanban-desktop.prefs`. A backup of that database restores all Desktop plugin
+  `opencode.global.dat` / `plugin.nmdra.kanban-desktop.boards` and
+  `plugin.nmdra.kanban-desktop.prefs`. The older `plugin.nmdra.kanban-desktop.board` row is read
+  once during migration and then kept empty. A backup of that database restores all Desktop plugin
   storage, not only Kanban.
-- **Exported snapshots:** `<selected project>/kanban-board.json`, with
+- **Exported snapshots:** `<board folder>/kanban-board.json`, with
   `kanban-board.json.bak` and `kanban-board.backup.json` as described in
-  [`docs/board-file.md`](docs/board-file.md).
+  [`docs/board-file.md`](docs/board-file.md). The board folder is the project root unless the user
+  chose another folder for that project.
 - **Worktrees, branches, sessions, messages:** managed by OpenCode, outside the plugin.
 
 ## Handling a report

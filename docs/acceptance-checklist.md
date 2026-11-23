@@ -8,7 +8,7 @@ The board file's exact behavior is in [`board-file.md`](board-file.md).
 
 - [ ] `npm ci` from a clean checkout
 - [ ] `npm run typecheck` exits 0
-- [ ] `npm test` passes every case (**124** at the time of writing; update the docs if the count changes)
+- [ ] `npm test` passes every case (**135** at the time of writing; update the docs if the count changes)
 - [ ] `npm run build` emits `dist/gui-experimental.cjs`
 - [ ] A second build is byte-identical (`cp dist/gui-experimental.cjs /tmp/a && npm run build && cmp /tmp/a dist/gui-experimental.cjs`)
 - [ ] The bundle requires only `effect`, `@opencode/plugin/gui`, `@opencode/plugin/rpc`, `solid-js`, and `solid-js/web`
@@ -37,8 +37,8 @@ The board file's exact behavior is in [`board-file.md`](board-file.md).
 - [ ] Shift+arrows move the selected task
 - [ ] Arrow keys move the selection; Enter opens; Escape clears
 - [ ] Searching matches title, branch, project name, and notes; Escape clears
-- [ ] Columns add, rename, recolor, reorder, and delete for the selected project
-- [ ] A project's first column edit copies the shared defaults; other projects keep their own columns
+- [ ] Columns add, rename, recolor, reorder, and delete for the selected project's board
+- [ ] A new project board starts with Todo / In progress / Done; changing one project's columns leaves other boards unchanged
 - [ ] Deleting a column moves that project's tasks; its last column cannot be deleted
 - [ ] A task cannot move into another project's column
 - [ ] Compact columns toggle from the header, `C`, the palette, and settings; cards become one-line rows and the setting survives a restart
@@ -48,7 +48,7 @@ The board file's exact behavior is in [`board-file.md`](board-file.md).
 - [ ] Task edit persists title, column, notes, and tags
 - [ ] Tags can be added, renamed, recolored, and deleted from the manager for the selected project
 - [ ] Tag changes in one project do not rename or delete tags in another project
-- [ ] Existing shared tags migrate into each project with tasks; empty tag sets stay empty
+- [ ] v0.1.1 tags are split into their owning project's board; empty tag sets stay empty
 - [ ] Assigning tags shows chips on cards (up to three plus `+N`) and all tags in detail/archive
 - [ ] The tag picker and filter only offer the selected project's tags
 - [ ] The tag filter uses AND semantics and can be cleared
@@ -118,21 +118,25 @@ The board file's exact behavior is in [`board-file.md`](board-file.md).
 - [ ] New tasks record the mounted server id; legacy tasks are claimed when their project opens
 - [ ] The board, archive, pill, and live status do not mix tasks from another server with the same project id
 - [ ] Two OpenCode project records for the same folder appear once in the switcher; the routed id wins
+- [ ] Switching projects swaps the entire board, including that project's columns, tags, and archive; no cards leak between projects
 - [ ] The project switcher follows the routed session's project on open
-- [ ] Export writes the **whole installation board** (every project, all tags/columns, archived cards) to the selected project's root
+- [ ] Export writes only the selected project's board (tasks, tags, columns, archived cards) to its board folder
+- [ ] A project's board folder defaults to its root and can be changed with the folder action; the choice survives a restart
 - [ ] Export keeps an existing previous file as `kanban-board.json.bak`
 - [ ] Exporting into a git project may create an untracked/modified board file; the doc warns about it
-- [ ] Reload reads an **exported/current** `kanban-board.json`, confirms when the board has any task, and replaces the board with the file
-- [ ] Reload writes `kanban-board.backup.json` only after confirmation and only when the board has at least one task; an empty board writes no new backup
+- [ ] Reload reads an **exported/current** project `kanban-board.json`, confirms when that project's board has any task, and replaces that project's board with the file
+- [ ] Reload writes `kanban-board.backup.json` only after confirmation and only when that project's board has at least one task; an empty board writes no new backup
+- [ ] A reload of a legacy whole-installation file keeps only the selected project's tasks and ignores other folders
 - [ ] A failed pre-reload backup cancels the reload and leaves the board untouched
 - [ ] Missing, oversized, invalid-JSON, or wrong-shape files leave the existing board untouched with a clear toast
-- [ ] A valid reload's cards, columns, tags, assignments, positions, and archive state match the file; there is no general merge
+- [ ] A valid reload's cards, columns, tags, assignments, and archive state match the file; there is no general merge
 - [ ] A missing `sessionID` is preserved for an imported task with the same task ID; a session ID named by the file wins
 - [ ] Live status is derived from sessions and is not claimed to be stored/reset by reload
 - [ ] The board file RPC writes only the fixed filenames, atomically, capped at 5,000,000 bytes
-- [ ] A recovery reload from `kanban-board.backup.json` restores the pre-reload live board
+- [ ] A recovery reload from `kanban-board.backup.json` restores the pre-reload project board
 - [ ] `normalizeBoard` repairs a hand-edited board without dropping the window
-- [ ] `Reset board data` is global and also deletes tags and tag assignments
+- [ ] A v0.1.1 board with tasks from several projects is split into one board per folder without losing cards
+- [ ] `Reset board data` is global and also deletes tags and tag assignments in every board
 
 ## Security and privacy
 
@@ -146,7 +150,7 @@ The board file's exact behavior is in [`board-file.md`](board-file.md).
 ## Documentation
 
 - [ ] README install steps match the actual paths and Desktop version
-- [ ] README limitations match observed behavior, including whole-installation export/reload, foreign project IDs, stale session bindings, and platform coverage
+- [ ] README limitations match observed behavior, including project-scoped export/reload, foreign project IDs, stale session bindings, and platform coverage
 - [ ] README's export/reload section uses replacement wording and names the backup conditions
 - [ ] `docs/design.md`, `docs/test-plan.md`, `docs/release-checklist.md`, `docs/board-file.md`, `docs/troubleshooting.md`, and `SECURITY.md` are current
 - [ ] `TODO.md` has no unchecked P0 without a written waiver

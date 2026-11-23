@@ -65,12 +65,16 @@ export function TaskDialog(props: TaskDialogProps) {
   const ctx = usePlugin<typeof definition>()
   const ui = ctx.ui
   const prefs = () => ctx.stores.prefs.value
-  const board = () => ctx.stores.board.value
+  const boardFor = (projectID: string) => {
+    const root = findProject(props.projects, projectID)?.root ?? ""
+    return props.services.boardFor(root, projectID)
+  }
+  const board = () => boardFor(projectID())
   const editing = () => props.task !== undefined
   const suggested = generateBranch()
   const initialProjectID = props.task?.projectID ?? props.initialProjectID
   const initialCategory = () => {
-    const list = categories(board(), initialProjectID)
+    const list = categories(boardFor(initialProjectID), initialProjectID)
     if (props.initialCategoryID && list.some((category) => category.id === props.initialCategoryID)) {
       return props.initialCategoryID
     }
@@ -397,7 +401,7 @@ export function TaskDialog(props: TaskDialogProps) {
                 icon="outline-sliders"
                 onClick={() => {
                   const row = project()
-                  if (row) props.services.openTagsDialog(row.id, row.name)
+                  if (row) props.services.openTagsDialog(row.id, row.name, row.root)
                 }}
               >
                 {ctx.t("tags.manage")}
@@ -496,15 +500,18 @@ export function TaskDialog(props: TaskDialogProps) {
 type ColumnsDialogProps = {
   projectID: string
   projectName?: string
+  projectRoot?: string
+  services: KanbanServices
   onClose(): void
 }
 
 export function ColumnsDialog(props: ColumnsDialogProps) {
   const ctx = usePlugin<typeof definition>()
   const ui = ctx.ui
-  const board = () => ctx.stores.board.value
+  const board = () => props.services.boardFor(props.projectRoot, props.projectID)
   const columns = () => categories(board(), props.projectID)
-  const save = (next: ReturnType<typeof addCategory>) => ctx.stores.board.set(next)
+  const save = (next: ReturnType<typeof addCategory>) =>
+    props.services.saveBoard(props.projectRoot, next, props.projectID)
 
   const add = () => save(addCategory(board(), props.projectID, "New column"))
 
@@ -609,15 +616,18 @@ export function ColumnsDialog(props: ColumnsDialogProps) {
 type TagsDialogProps = {
   projectID: string
   projectName?: string
+  projectRoot?: string
+  services: KanbanServices
   onClose(): void
 }
 
 export function TagsDialog(props: TagsDialogProps) {
   const ctx = usePlugin<typeof definition>()
   const ui = ctx.ui
-  const board = () => ctx.stores.board.value
+  const board = () => props.services.boardFor(props.projectRoot, props.projectID)
   const tags = () => tagsOf(board(), props.projectID)
-  const save = (next: ReturnType<typeof addTag>) => ctx.stores.board.set(next)
+  const save = (next: ReturnType<typeof addTag>) =>
+    props.services.saveBoard(props.projectRoot, next, props.projectID)
 
   const add = () => save(addTag(board(), props.projectID, "New tag"))
 

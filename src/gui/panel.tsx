@@ -18,6 +18,7 @@ import {
 } from "./model/board.ts"
 import { firstVisibleTask, visibleTasks } from "./model/select.ts"
 import { findProject, mergeProject, projectRows } from "./model/projects.ts"
+import { projectKey } from "./model/boards.ts"
 import { BoardView } from "./components/board.tsx"
 import { DetailView } from "./components/detail.tsx"
 import { ArchiveView } from "./components/archive.tsx"
@@ -43,7 +44,6 @@ function errorText(error: unknown): string {
 export function BoardWorkspace(props: WorkspaceProps) {
   const ctx = usePlugin<typeof definition>()
   const ui = ctx.ui
-  const board = () => ctx.stores.board.value
   const prefs = () => ctx.stores.prefs.value
   const serverID = props.session.server.id
   const compact = () => (prefs().density ?? "comfortable") === "compact"
@@ -58,6 +58,16 @@ export function BoardWorkspace(props: WorkspaceProps) {
 
   const projects = () => mergeProject(projectRows(props.session.server.data.project.list()), props.session.project)
   const routed = () => props.services.projectFor(props.session)
+  const boardRoot = () => {
+    const id = projectID()
+    const row = findProject(projects(), id)
+    if (row) return row.root
+    const routedProject = routed()
+    return routedProject && routedProject.id === id ? routedProject.root : ""
+  }
+  const board = () => props.services.boardFor(boardRoot(), projectID())
+  const saveBoard = (next: ReturnType<typeof claimTask>) =>
+    props.services.saveBoard(boardRoot(), next, projectID())
 
   const [projectID, setProjectID] = createSignal<string | undefined>(
     props.initialProjectID ?? routed()?.id ?? prefs().lastProjectID,
@@ -89,9 +99,12 @@ export function BoardWorkspace(props: WorkspaceProps) {
   createEffect(
     on(projectID, (id) => {
       if (!id) return
-      ctx.stores.prefs.set({ ...prefs(), lastProjectID: id })
-      const selected = board().tasks.find((task) => task.id === props.services.selectedTaskID())
-      if (selected && selected.projectID !== id) props.services.selectTask(undefined)
+      const root = findProject(projects(), id)?.root ?? ""
+      ctx.stores.prefs.set({ ...prefs(), lastProjectID: id, lastBoardKey: projectKey(root, id) })
+      const selectedID = props.services.selectedTaskID()
+      if (selectedID && !board().tasks.some((task) => task.id === selectedID)) {
+        props.services.selectTask(undefined)
+      }
     }),
   )
 
@@ -103,7 +116,7 @@ export function BoardWorkspace(props: WorkspaceProps) {
     if (legacy.length === 0) return
     let next = board()
     for (const task of legacy) next = claimTask(next, task.id, serverID)
-    ctx.stores.board.set(next)
+    saveBoard(next)
   })
 
   createEffect(() => {
@@ -315,11 +328,11 @@ export function BoardWorkspace(props: WorkspaceProps) {
     if (shift) {
       if (dx !== 0) {
         const next = moveTaskToCategory(board(), current.id, dx)
-        ctx.stores.board.set(next)
+        saveBoard(next)
         props.services.live.invalidate(props.session.server.id, id)
       }
       if (dy !== 0) {
-        ctx.stores.board.set(moveTaskBy(board(), current.id, dy))
+        saveBoard(moveTaskBy(board(), current.id, dy))
         props.services.live.invalidate(props.session.server.id, id)
       }
       return
@@ -451,7 +464,7 @@ export function BoardWorkspace(props: WorkspaceProps) {
                 size="small"
                 onClick={() => {
                   const id = projectID()
-                  if (id) props.services.openColumnsDialog(id, projectLabel())
+                  if (id) props.services.openColumnsDialog(id, projectLabel(), boardRoot())
                 }}
               />
             </ui.Tooltip>
@@ -471,7 +484,7 @@ export function BoardWorkspace(props: WorkspaceProps) {
                 size="small"
                 onClick={() => {
                   const id = projectID()
-                  if (id) props.services.openTagsDialog(id, projectLabel())
+                  if (id) props.services.openTagsDialog(id, projectLabel(), boardRoot())
                 }}
               />
             </ui.Tooltip>
@@ -500,6 +513,17 @@ export function BoardWorkspace(props: WorkspaceProps) {
                 size="small"
                 busy={reloading()}
                 onClick={() => void reloadBoard()}
+              />
+            </ui.Tooltip>
+            <ui.Tooltip value={ctx.t("action.boardFolder")}>
+              <ui.IconButton
+                icon="folder"
+                label={ctx.t("action.boardFolder")}
+                size="small"
+                onClick={() => {
+                  const id = projectID()
+                  if (id) void props.services.chooseBoardFolder(props.session, id)
+                }}
               />
             </ui.Tooltip>
             <Show when={!props.dialog}>
@@ -632,6 +656,7 @@ export function BoardWorkspace(props: WorkspaceProps) {
             <BoardView
               session={props.session}
               projectID={projectID() ?? ""}
+              projectRoot={boardRoot()}
               serverID={serverID}
               projects={projects()}
               query={query()}
@@ -664,6 +689,7 @@ export function BoardWorkspace(props: WorkspaceProps) {
               <ArchiveView
                 session={props.session}
                 projectID={projectID() ?? ""}
+                projectRoot={boardRoot()}
                 serverID={serverID}
                 query={query()}
                 tagIDs={selectedTagIDs()}

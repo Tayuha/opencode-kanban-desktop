@@ -20,7 +20,7 @@
 
 | opencode-kanban (TUI) | opencode-kanban-desktop |
 |---|---|
-| Per-project SQLite file | One `Store.global` board; tasks carry a `projectID` |
+| Per-project SQLite file | One `Store.global` board map, keyed by canonical project folder |
 | Repository registry | OpenCode projects (`data.project.list`, `session.project`) |
 | `git worktree add/remove` | `client.worktree.create/remove/refresh` |
 | tmux session per task | OpenCode session in the worktree directory |
@@ -78,12 +78,14 @@ model never imports the SDK or Solid. The split mirrors `opencode-cache-stats-gu
 ## Data model
 
 ```ts
+type BoardMap = Readonly<Record<string, Board>>   // key: canonical project folder
+
 type Board = {
   version: number              // 1
-  tags?: readonly Tag[]        // shared tag seed
-  tagsByProject?: Readonly<Record<string, readonly Tag[]>>
-  categories: readonly Category[]  // shared default columns
-  categoriesByProject?: Readonly<Record<string, readonly Category[]>>
+  tags?: readonly Tag[]        // this project's tags
+  tagsByProject?: Readonly<Record<string, readonly Tag[]>>   // accepted from legacy files
+  categories: readonly Category[]  // this project's columns
+  categoriesByProject?: Readonly<Record<string, readonly Category[]>>  // accepted from legacy files
   tasks: readonly Task[]
 }
 
@@ -107,16 +109,22 @@ type Task = {
 }
 ```
 
-Positions are per `(projectID, categoryID)`. Every mutation renumbers the affected groups, so the
-stored order is always contiguous and stable. A task's array order is never relied on; the
+Positions are per category in a project's board. Every mutation renumbers the affected groups, so
+the stored order is always contiguous and stable. A task's array order is never relied on; the
 position/`createdAt` pair breaks ties.
 
-A project without a `categoriesByProject` entry uses the shared `categories` list. The first
-column mutation copies those defaults into a project-owned set, so later renames, reorders, and
-deletes stay local. Tasks keep a `categoryID`; a task can only move into a column in its own
-project's set. Tags use the same pattern with `tagsByProject`: an existing project with tasks gets
-a copy of the shared tags during normalization, and a task's `tagIDs` are validated against its
-own project's set.
+The board map is keyed by the canonical project folder, not by OpenCode's project id. Two project
+records for the same folder (for example `global` and a hashed id) therefore share one board and
+cannot leak cards into each other. `model/boards.ts` owns the keying, lookup, migration, project
+scoping, and optional board-folder map. A missing board is the normal default board with **Todo /
+In progress / Done** columns and no tags.
+
+Each project board normally stores its tags in `tags` and its columns in `categories`. The
+`tagsByProject` and `categoriesByProject` fields remain in the type and normalizer so a legacy
+v0.1.1 whole-installation board and old snapshot files still load. Migration groups tasks by
+`projectRoot`, gives each group its project's columns and tags, and writes one board per folder.
+`scopeBoardToProject` performs the same narrowing for reload and auto-reload, so a legacy file
+cannot reintroduce another project's cards.
 
 Tasks also record the OpenCode `serverID` that owns them. New tasks take it from the mounted
 session. A legacy task without one is visible on any server listing its project and is claimed by
@@ -133,10 +141,10 @@ against its project's columns and tags, and renumbers positions. `tags`, `tagsBy
 `tagIDs`, and `categoriesByProject` are optional, so older boards and `kanban-board.json` files
 still load.
 
-Tags are per project. Deleting one strips its ID from that project's tasks only; other projects
-keep their own tag. The tag filter uses AND semantics: a task must have every selected tag. Up to
-three tags render on a card, with a `+N` marker; clicking a card tag toggles it in the filter. The
-tag picker in the task dialog only offers the selected project's tags.
+Tags are per project board. Deleting one strips its ID from that project's tasks only. The tag
+filter uses AND semantics: a task must have every selected tag. Up to three tags render on a card,
+with a `+N` marker; clicking a card tag toggles it in the filter. The tag picker in the task dialog
+only offers the selected project's tags.
 
 ### Preferences
 
@@ -157,21 +165,24 @@ type Prefs = {
   autoPrompt: boolean
   initialPrompt: string
   lastProjectID?
+  lastBoardKey?                // canonical folder key last shown in the panel
+  boardDirs?: Record<string, string>  // optional per-project board folders
 }
 ```
 
-Both stores use `Store.global`, so the board and preferences follow the user across projects and
-windows in one Desktop installation.
+The `boards` map and preferences use `Store.global`, so they follow the user across windows in one
+Desktop installation. The deprecated `board` store is only read during the one-time v0.1.1
+migration.
 
 ### State ownership
 
 | State | Owner | Persisted? |
 |---|---|---|
-| Tasks, columns, tags, assignments, archive flags | GUI `Store.global` board | Yes, in Desktop plugin storage |
-| Preferences | GUI `Store.global` prefs | Yes, in Desktop plugin storage |
+| Every project's tasks, columns, tags, assignments, archive flags | GUI `Store.global` `boards` map | Yes, in Desktop plugin storage |
+| Preferences and board-folder overrides | GUI `Store.global` prefs | Yes, in Desktop plugin storage |
 | Live status, session titles, cost, todos, subagents | Live registry, derived from server data | No; recomputed |
 | Sessions, messages, worktrees, VCS status | OpenCode server | Yes, outside the plugin |
-| `kanban-board.json` and its backups | Project root, written only by explicit actions/RPC | Yes, as files |
+| Each project's `kanban-board.json` and its backups | Project root or the chosen board folder, written only by explicit actions/RPC | Yes, as files |
 | Tabs, notifications, clipboard, reveal | Desktop app | Outside the plugin |
 
 ## Lifecycle
@@ -180,17 +191,17 @@ windows in one Desktop installation.
 
 `setup` runs once per window:
 
-1. Reads the board store and runs `normalizeBoard`. If normalization changes the JSON, writes the
-   repaired board back.
-2. Creates one live registry with a 400ms event debounce and the current `pollMs` getter.
-3. Builds the services object used by both the panel and the full-board dialog.
-4. Registers the panel, commands, session menu item, style, settings page, composer pill, and the
+1. Normalizes the legacy `board` store and, when the `boards` map is empty, splits it by project
+   folder. Then empties the legacy store.
+2. Normalizes every per-project board and writes back only the ones that changed.
+3. Creates one live registry with a 400ms event debounce and the current `pollMs` getter.
+4. Builds the services object used by both the panel and the full-board dialog.
+5. Registers the panel, commands, session menu item, style, settings page, composer pill, and the
    routed-project watcher.
-5. On teardown, disposes the live registry (aborts in-flight requests, clears timers, stops event
-   subscriptions).
+6. On teardown, disposes the live registry and clears auto-export/reload timers.
 
-Normalization runs at setup, not on every render. A board imported by reload is normalized
-explicitly before it is written to the store.
+Normalization runs at setup, not on every render. A board imported by reload is normalized and
+project-scoped explicitly before it is written to the map.
 
 ### Panel mount and project selection
 
@@ -201,8 +212,8 @@ Each panel instance keeps a local project selection and a local search/tag filte
 - When the routed session changes, the panel follows that session's project.
 - When the project list arrives, a missing or stale selection falls back to the routed project or
   the first project.
-- Changing the project persists `lastProjectID` and clears a selection that belongs to another
-  project.
+- Changing the project persists `lastProjectID` and `lastBoardKey` and clears a selection that
+  belongs to another project's board.
 - The panel calls `project.sync()` once on mount so a newly opened project can appear.
 - It watches `(server, project)` through the live registry. Changing server, project, or the
   session's pending state tears down the old watch and starts a new one.
@@ -211,7 +222,7 @@ Each panel instance keeps a local project selection and a local search/tag filte
 - In the detail view, if the selected task disappears, the first visible task is selected.
 
 The full-board dialog uses the same `BoardWorkspace` component and the same services. It has its
-own watch and local filters, but shares the board store and preferences.
+own watch and local filters, but shares the per-project board map and preferences.
 
 ### Live registry lifecycle
 
@@ -241,7 +252,7 @@ own watch and local filters, but shares the board store and preferences.
    `client.worktree.create({ projectID, branch, from })`.
 5. `worktree.refresh` updates the app's project data. A refresh failure is ignored because the
    worktree was already created.
-6. The task is written to the board store with the returned directory, and live state is
+6. The task is written to its project's board with the returned directory, and live state is
    invalidated.
 7. Then:
    - auto-prompt: `startAgent` creates the session, sends the prompt, syncs it into the app's data
@@ -332,40 +343,44 @@ prompt cache, todos, and cost.
 
 ### Export and reload
 
-**Auto-export** watches the board store. After a board change settles for 1.5 seconds, it calls
-`save({ directory: lastSelectedProjectRoot, json })` silently. It never runs while the preference
-is off, and it retries when a session becomes available. A failure shows one toast per distinct
-error until a later write succeeds. Manual **Export board** uses the same save path immediately
-and reports the file and backup paths. Both keep the previous file as `kanban-board.json.bak`.
+**Auto-export** runs per project board. After one project's board changes settle for 1.5 seconds,
+the plugin serializes that board and calls `save({ directory: boardFolder, json })` silently. Each
+project keeps its own debounce, destination, and last-written snapshot, so switching projects does
+not export the wrong board. It never runs while the preference is off. A failure shows one toast
+per distinct error until a later write succeeds. Manual **Export board** uses the same save path
+immediately and reports the file and backup paths. Both keep the previous file as
+`kanban-board.json.bak`.
 
-**Auto-reload** polls `load({ directory: lastSelectedProjectRoot })` every two seconds while a
-session is active. The first successful read for a target establishes a baseline without replacing
-the board. Later reads that differ from the last seen file are applied only when the live board
-matches the last exported/reloaded state; otherwise the plugin skips the external change and shows
-one conflict toast. A successful apply normalizes the file, merges session bindings, replaces the
-board, invalidates live state, and then lets auto-export write the normalized snapshot back.
+**Auto-reload** polls the selected project's board file every two seconds while a session is
+active. The first successful read for a project establishes a baseline without replacing the
+board. Later reads that differ from the last seen file are applied only when that project's live
+board matches its last exported/reloaded state; otherwise the plugin skips the external change and
+shows one conflict toast. A successful apply parses the file, scopes it to the project, normalizes
+it, merges session bindings, replaces only that project's board, and invalidates live state. It
+does not auto-export the result back.
 
-Reload calls `load({ directory: selectedProjectRoot })` explicitly. Auto-export makes the live
+Reload calls `load({ directory: boardFolder })` explicitly. Auto-export makes the live project
 board authoritative; an externally edited file is overwritten on the next board change unless it
 is reloaded or auto-reloaded first.
 
-Reload is a **full replacement**:
+Reload is a **project replacement**:
 
-1. If the live board has any task in any project, confirm.
-2. After confirmation, write the live board to `kanban-board.backup.json` with
+1. If that project's live board has any task, confirm.
+2. After confirmation, write that project's live board to `kanban-board.backup.json` with
    `save({ target: "backup" })`. A failure cancels the reload.
-3. Read and parse the file, check `isBoardLike`, run `normalizeBoard`, then
-   `mergeSessionBindings(imported, current)`.
-4. Replace the board store and invalidate live state.
+3. Read and parse the file, check `isBoardLike`, normalize it, then scope it to the project folder
+   (or project id for a root-less legacy task).
+4. `mergeSessionBindings(imported, current)`.
+5. Replace only that project's board and invalidate live state.
 
 The only merge is session binding preservation: an imported task with the same task ID and no
-`sessionID` keeps the live task's binding. Everything else comes from the file. Preferences are
-not in the file. Live status is derived, never stored. The selected project chooses only the file
-directory; the file contains every project's cards.
+`sessionID` keeps the live task's binding. Everything else comes from the file. Other projects'
+boards and preferences are untouched. Live status is derived, never stored. The file contains only
+the reloaded project's cards; tasks for other folders in a legacy file are ignored.
 
-The backup is written only when the board has at least one task (archived included), the user
-confirms, and the write succeeds. An empty board reloads without a confirmation or a new backup.
-See [`board-file.md`](board-file.md) for exact guarantees, recovery, and trust boundaries.
+The backup is written only when the project's board has at least one task (archived included), the
+user confirms, and the write succeeds. An empty board reloads without a confirmation or a new
+backup. See [`board-file.md`](board-file.md) for exact guarantees, recovery, and trust boundaries.
 
 ### Open a task
 
@@ -411,9 +426,12 @@ leaves the session bound and open and reports a toast.
 - **Side panel is primary.** The GUI SDK contributes panels, commands, menus, composer pills,
   settings pages, styles, and dialogs, but no full route. A 560px panel with `wide: true` is usable
   for three columns; the full board command reuses the same workspace in an `x-large` dialog.
-- **Columns are per project.** A project inherits the shared defaults until its first edit, then owns
-  its set. Tasks remain project-scoped, and a column from one project is never a valid target for
-  another project's task.
+- **Columns are per project.** Each project board owns its set. A new board starts from **Todo /
+  In progress / Done**. Tasks remain in their board, and a column from one project is never a valid
+  target for another project's task.
+- **Board files are per project.** The default is `<projectRoot>/kanban-board.json`; the panel's
+  folder action stores an optional override per project. A reload scopes the file to the project,
+  so a legacy whole-installation snapshot cannot add another project's cards.
 - **Compact density is a reading mode.** It keeps the same board DOM and interactions but hides tags,
   branch/worktree lines, and card details, clamps cards to one line, and caps scroll-mode columns at
   220px. The toggle lives in the panel header, the `C` key, the palette, and settings.
@@ -450,12 +468,13 @@ leaves the session bound and open and reports a toast.
 | VCS read fails | Detail view shows the changes error; the rest of the card works |
 | Session not known to the app | `data.session.sync` before opening the tab; a failure is ignored because the event stream may catch up |
 | Stored session was deleted | The pin is cleared after a confirmed not-found; a toast explains; Link/New session can attach another |
-| Auto-export fails | A single toast per distinct error; the live board stays intact and a later change retries |
-| External file changes with unsaved live edits | Auto-reload skips and shows a conflict toast; the live board is untouched |
+| Auto-export fails | A single toast per distinct error; that project's live board stays intact and a later change retries |
+| External file changes with unsaved live edits | Auto-reload skips and shows a conflict toast; that project's board is untouched |
 | Project list not loaded | The routed session's project is merged in as a fallback |
-| Old/invalid board data at startup | `normalizeBoard` repairs it; normalization is not a schema migration |
-| Reload file missing/invalid | Toast; the current board is untouched |
-| Pre-reload backup fails | Reload is cancelled; the current board is untouched |
+| Old/invalid board data at startup | Legacy data is split once, then `normalizeBoard` repairs each project; normalization is not a schema migration |
+| Reload file contains other projects | Tasks for other folders are ignored; only the selected project's board changes |
+| Reload file missing/invalid | Toast; the current project board is untouched |
+| Pre-reload backup fails | Reload is cancelled; the current project board is untouched |
 | Export `.bak` copy fails | Export is cancelled; the existing board file is untouched |
 | Board RPC unavailable | Toast asking for a Desktop restart |
 
@@ -472,7 +491,7 @@ leaves the session bound and open and reports a toast.
 
 ## Testing
 
-The documented v0.1.1 suite has 124 vitest cases:
+The documented v0.1.1 suite has 135 vitest cases:
 
 | File | Cases | Focus |
 |---|---:|---|
@@ -480,6 +499,7 @@ The documented v0.1.1 suite has 124 vitest cases:
 | `model/status.test.ts` | 12 | path normalization, session rows, pinned vs discovery matching, existing-folder matching, descendants, live derivation, status/transition helpers |
 | `model/todo.test.ts` | 8 | todo normalization, newest tool call, metadata/text fallbacks, percentage |
 | `model/projects.test.ts` | 10 | names, sort/dedupe, same-folder ids, routed fallback, lookups |
+| `model/boards.test.ts` | 11 | project keys, lookup/write immutability, migration split, project scoping, board folders |
 | `model/select.test.ts` | 7 | text/tag filters, server scope, column/archive selection, neighbours, status keys |
 | `data/live.test.ts` | 8 | derived live state, server-scoped tasks, pinned-session hydration, archived pins, deleted-pin reporting, missing-pin isolation, running→idle callback, stale fallback with a fake client |
 | `server/board-file.test.ts` | 9 | read/write, missing/invalid/oversized/aborted, `.bak`, separate backup |
@@ -492,15 +512,16 @@ I/O; it cannot prove Desktop's event timing, tab behavior, or notification deliv
 
 ## Trade-offs and follow-ups
 
-- Per-project columns and tags keep workflows separate but add a mapping layer and a lazy copy on
-  first edit; existing projects migrate their tags during normalization.
-- A global board file makes backup and transfer easy but means export/reload is not project-scoped.
-- Auto-export keeps the file current but overwrites external edits; `.bak` rotates to the
+- Per-project boards keep workflows isolated, but adding a project creates a new board and a new
+  snapshot file. The canonical-folder key means duplicate OpenCode project records share one board.
+- A per-project board file makes backup and transfer easy; a legacy whole-installation file is
+  narrowed to one project on reload.
+- Auto-export keeps each file current but overwrites external edits; `.bak` rotates to the
   immediately previous snapshot.
 - Pinned sessions are authoritative and hydrated by ID; only unpinned tasks use the directory
   discovery fallback, which becomes an explicit pin when the task is opened.
-- Server ids scope tasks and live state. Legacy tasks are claimed lazily because the board store
-  does not know the server until a mounted session reads the project.
+- Server ids scope tasks and live state. Legacy tasks are claimed lazily because a board does not
+  know the server until a mounted session reads the project.
 - Desktop's plugin store is not encrypted; OS permissions and Desktop's storage protect it.
 - Follow-ups: tag reordering, persistent undo history, pinning closed sessions, multi-server task
   records, and macOS/Windows verification.

@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest"
 import { definition } from "./definition.ts"
 
 describe("definition", () => {
-  it("declares the board and preferences stores", () => {
-    expect(Object.keys(definition.stores ?? {}).sort()).toEqual(["board", "prefs"])
+  it("declares the per-project board and preferences stores", () => {
+    expect(Object.keys(definition.stores ?? {}).sort()).toEqual(["board", "boards", "prefs"])
   })
 
   it("ships English copy for every surface", () => {

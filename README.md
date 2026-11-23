@@ -12,7 +12,7 @@ OpenCode Desktop's native project, worktree, session, tab, dialog, and notificat
 
 **Release scope:** local/private v0.1.1 for OpenCode Desktop 2.3.2. The package is `private: true`
 and installs from this checkout; it is not published to npm. The documented v0.1.1 baseline passes
-`typecheck`, 124 unit tests, and a deterministic single-file GUI build.
+`typecheck`, 135 unit tests, and a deterministic single-file GUI build.
 
 ## Requirements
 
@@ -126,6 +126,7 @@ the task works in the project root.
 | Composer pill | Above the composer while the routed project has active cards; click the pill to open the board, or click a running task in its menu |
 | Reload board | The download icon in the panel header, or **Kanban: reload board from kanban-board.json** |
 | Export board | The upload icon in the panel header, or **Kanban: export board to kanban-board.json** |
+| Board file folder | The folder icon in the panel header; use the project root or choose another folder for this project |
 | Tags | The Tags button in the panel header, or **Kanban: manage tags** |
 | Columns | The Columns button in the panel header, or **Kanban: manage columns** |
 | Compact columns | The collapse/expand button in the panel header, `C`, or **Kanban: toggle compact columns** |
@@ -134,13 +135,12 @@ the task works in the project root.
 
 The panel is the primary surface. It is 560px wide and can be widened by the app, or moved to the
 bottom pane like any other side tab. The full board command renders the same workspace in a large
-dialog and shares the same board store and live state.
+dialog and shares the same per-project board data and live state.
 
 ### The board
 
-- **Columns are per project.** The selected project owns its columns. A project starts from the
-  shared default **Todo / In progress / Done** set; its first column edit copies that set for the
-  project, so later changes stay local. Add, rename, recolor, reorder, and delete them from
+- **Columns are per project.** The selected project's board owns its columns. A new board starts
+  with **Todo / In progress / Done**. Add, rename, recolor, reorder, and delete them from
   **Columns** or a column's menu. Deleting a column moves that project's tasks to its first
   remaining column; the last column cannot be deleted.
 - **Compact columns** hide tags, branch/worktree lines, and card details so more columns fit in a
@@ -165,9 +165,9 @@ running. The archive view lists archived tasks; it does not have a separate coun
 
 ### Tags
 
-Tags are customizable and **per project**, like columns: a name and a color, created and edited
-from **Tags** in the panel header (or the palette command). A project inherits the shared tag
-seed until its first tag edit, then owns its set.
+Tags are customizable and **per project board**, like columns: a name and a color, created and
+edited from **Tags** in the panel header (or the palette command). A new board starts with no tags;
+v0.1.1 tags are split into their owning project during the one-time migration.
 
 - Assign tags in the task dialog. Cards show up to three and a `+N` marker; the detail view and
   archive show all assigned tags.
@@ -274,41 +274,41 @@ lifecycle and limits.
 
 ### Export and reload
 
-Both actions operate on **the whole installation board**, not just the project selected in the
-panel. The selected project only chooses where the file is written or read.
+Both actions operate on **the project selected in the panel's board**. The selected project also
+chooses the folder, which defaults to its root.
 
 - **Auto-export is on by default.** After column, tag, task, archive, undo, session-link, or
-  move changes settle for 1.5 seconds, the live board is written to the last selected project's
+  move changes settle for 1.5 seconds, that project's live board is written to its
   `kanban-board.json` atomically. It is silent; failures show a toast. The previous file is copied
   to `kanban-board.json.bak` on each write, so `.bak` is the immediately previous snapshot. Disable
-  it in **Settings → Extensions → Kanban → Auto-export board**.
-- **Export board** writes immediately and reports the path and backup path. It uses the selected
-  project's root.
-- **Auto-reload is on by default.** While a session is active, the plugin checks the last selected
-  project's `kanban-board.json` every two seconds. If the file changed externally and the live board
-  has no unsaved changes, the board updates automatically. If you have unsaved live edits, it skips
-  the external change and shows a conflict toast instead of overwriting your work. Disable it in
-  **Settings → Extensions → Kanban → Auto-reload external changes**.
-- **Reload board** remains available for an explicit import. Auto-export makes the live board
-  authoritative; an externally edited file is overwritten by the next board change unless it is
-  reloaded or auto-reloaded first.
-- **Reload board** reads `<selected project root>/kanban-board.json` and **replaces the live board
-  with the file**. If the board contains at least one task in any project, Desktop asks for
-  confirmation first and writes the live board to `kanban-board.backup.json` before reading. If
-  that backup fails, the reload is cancelled. An empty board reloads without a confirmation or a
-  new backup.
+  it in **Settings → Extensions → Kanban → Auto-export this project's board**.
+- **Export board** writes immediately and reports the path and backup path. It uses the project's
+  board folder.
+- **Auto-reload is on by default.** While a session is active, the plugin checks the selected
+  project's `kanban-board.json` every two seconds. If the file changed externally and that project's
+  live board has no unsaved changes, the board updates automatically. If you have unsaved live
+  edits, it skips the external change and shows a conflict toast instead of overwriting your work.
+  Disable it in **Settings → Extensions → Kanban → Auto-reload external changes**.
+- **Reload board** remains available for an explicit import. Auto-export makes the live project
+  board authoritative; an externally edited file is overwritten by the next board change unless it
+  is reloaded or auto-reloaded first.
+- **Reload board** reads the project's `kanban-board.json` and **replaces that project's board
+  with the file**. If the board contains at least one task, Desktop asks for confirmation first and
+  writes the live board to `kanban-board.backup.json` before reading. If that backup fails, the
+  reload is cancelled. An empty board reloads without a confirmation or a new backup. A legacy
+  whole-installation file is narrowed to the selected project; other folders' tasks are ignored.
 - A missing, oversized, invalid-JSON, or wrong-shape file leaves the live board untouched and
   shows a toast. If a pre-reload backup was already written, it remains on disk.
 - A task's current session binding is kept when the imported task has the same ID and does not name
   a session. If the file names one, the file wins. Live status is always derived from sessions; it
   is not stored in the file and is not "reset" by a reload except through changed bindings.
 - Preferences are **not** in the board file. Columns, tags, tasks, positions, archive state, and
-  tag assignments come from the file.
+  tag assignments come from the file for that project only.
 
-Because reload is a full replacement, **export before a valid reload**. A stale seed file will
-remove cards, columns, tags, tag assignments, and archive state that are not in that seed. Read
-[`docs/board-file.md`](docs/board-file.md) for the exact format, backup conditions, recovery
-recipes, and caveats.
+Because reload is a replacement of one project's board, **export before a valid reload**. A stale
+seed file will remove cards, columns, tags, tag assignments, and archive state that are not in that
+seed. Read [`docs/board-file.md`](docs/board-file.md) for the exact format, backup conditions,
+recovery recipes, and caveats.
 
 ### Keyboard
 
@@ -349,44 +349,50 @@ move task left/right/up/down**.
 | Send the initial prompt | Off | Initial state of the task-dialog switch; creates the session and sends the prompt immediately |
 | Default initial prompt | Empty | Prefills new task dialogs and the detail view's **Start agent** action; remembered for the next task |
 | Refresh interval | 15 s | Safety poll on top of session events: Off, 5, 15, 30, or 60 seconds; changes apply immediately |
-| Auto-export board | On | Write board changes to `kanban-board.json` automatically; Reload stays manual |
-| Auto-reload external changes | On | Apply external `kanban-board.json` edits every two seconds; skipped when the live board has unsaved changes |
+| Auto-export board | On | Write this project's changes to its `kanban-board.json` automatically; Reload stays manual |
+| Auto-reload external changes | On | Apply external edits to this project's `kanban-board.json` every two seconds; skipped when the live board has unsaved changes |
 | Completion notifications | On | Notify when a watched task's session goes from running to idle |
 | Composer pill | On | Show the routed project's task/running status above the composer |
-| Reset board data | — | Delete every task and every per-project tag and column set; restore the three default columns. Worktrees, sessions, and preferences stay |
+| Reset board data | — | Delete every task and every per-project tag and column set; restore the three default columns in each board. Worktrees, sessions, and preferences stay |
 
 `options.pill: false` in the plugin's `opencode.json` entry hides the composer pill regardless of
 the stored setting. The board still runs; only the pill is hidden.
 
-`Reset board data` is a global board reset, not a per-project delete. It deletes every task and
-every project's tag and column sets, then restores the shared default **Todo / In progress /
-Done** columns. It does not remove worktrees, stop sessions, or change settings. If the
-saved default column is missing from a project, new tasks fall back to that project's first column.
+`Reset board data` is a global reset, not a per-project delete. It deletes every task and
+every project's tag and column sets, then restores **Todo / In progress / Done** in each board. It
+does not remove worktrees, stop sessions, or change settings. If the saved default column is missing
+from a project, new tasks fall back to that project's first column.
 
 ## Storage and scope
 
-The board (`version`, `tags`, `tagsByProject`, `categories`, `categoriesByProject`, `tasks`) and
-preferences live in Desktop's plugin storage with `Store.global`, under the plugin's own namespace. There is one board per Desktop
-installation. They are local to this installation and are **not** shared with the Rust TUI's SQLite
-databases. Worktrees, branches, and sessions stay on disk/server; the plugin only remembers their
-identifiers and paths.
+Every project folder owns its own board. Boards are keyed by the canonical project folder, so two
+OpenCode project records for the same directory share one board instead of leaking cards into each
+other. A board contains its own columns, tags, assignments, archive state, and tasks; preferences
+are separate. Boards and preferences live in Desktop's plugin storage with `Store.global`, under
+the plugin's own namespace. They are local to this installation and are **not** shared with the
+Rust TUI's SQLite databases. Worktrees, branches, and sessions stay on disk/server; the plugin only
+remembers their identifiers and paths.
 
 On this Linux installation, Desktop's plugin storage is backed by
-`~/.config/ai.opencode.desktop/drafts.sqlite`. In this build, the board and preferences are `state`
-rows named `opencode.global.dat` / `plugin.nmdra.kanban-desktop.board` and
-`plugin.nmdra.kanban-desktop.prefs`. Treat that database as the authoritative copy of the board
-until you export it. The board file in a project root is an explicit snapshot you create.
+`~/.config/ai.opencode.desktop/drafts.sqlite`. In this build, the board map and preferences are
+`state` rows named `opencode.global.dat` / `plugin.nmdra.kanban-desktop.boards` and
+`plugin.nmdra.kanban-desktop.prefs`. The older `plugin.nmdra.kanban-desktop.board` row is read once
+during the upgrade and then kept empty. Treat the database as the authoritative copy until you
+export a project. The board file in a project's board folder is an explicit snapshot you create.
 
-Columns and tags are per project. A project without its own `categoriesByProject` or
-`tagsByProject` entry follows the shared defaults; the first edit copies those defaults into the
-project's own set. The project switcher deduplicates by canonical folder path, so two OpenCode
-project records for the same directory appear once; the routed project's id wins. Tasks record the `serverID` that owns them; legacy tasks without one are claimed
-by the first server that opens a board knowing their project. The local Desktop server is
-`sidecar`, so a single-server board legitimately has `sidecar` on every task. The project switcher
-in the panel header shows another project's board without leaving the session, including that
-project's columns and tags. The switcher can only show projects that the current Desktop
-installation knows about; tasks from a foreign board file whose project IDs do not exist here
-remain stored but may not be reachable in the switcher.
+The project switcher in the panel header shows another project's entire board without leaving the
+session, including that project's columns and tags. Switching projects swaps the board; it does not
+merge or filter another project's cards into the current one. The switcher can only show projects
+that the current Desktop installation knows about. Tasks record the `serverID` that owns them;
+legacy tasks without one are claimed by the first server that opens a board knowing their project.
+The local Desktop server is `sidecar`, so a single-server board legitimately has `sidecar` on every
+task.
+
+Each project's board file defaults to `<projectRoot>/kanban-board.json`. The folder icon in the
+panel header lets you choose a different folder for that project; the choice is stored per project
+folder. The RPC still writes only the fixed filenames (`kanban-board.json`,
+`kanban-board.json.bak`, and `kanban-board.backup.json`) into the chosen folder. Use a distinct
+folder per project; choosing one folder for several projects makes them share one file.
 
 ## Security and privacy
 
@@ -398,18 +404,19 @@ remain stored but may not be reachable in the switcher.
 - **Bounded writes.** It creates and removes worktrees, creates and prompts sessions, opens tabs,
   writes its own plugin storage, copies explicit text to the clipboard, reveals folders, and writes
   the fixed board filenames. Nothing else.
-- **Board file RPC.** `nmdra.kanban-desktop.board.load` reads `<project>/kanban-board.json`;
+- **Board file RPC.** `nmdra.kanban-desktop.board.load` reads `<folder>/kanban-board.json`;
   `save` writes that file and its `.bak`, or `kanban-board.backup.json` for a pre-reload backup.
-  Fixed filenames, atomic writes, a 5,000,000-byte cap, and no directory listings. The RPC trusts
-  the absolute directory supplied by its caller; the GUI passes the selected project's root.
+  `<folder>` is the project root unless the user chose a board folder for that project. Fixed
+  filenames, atomic writes, a 5,000,000-byte cap, and no directory listings. The RPC trusts
+  the absolute directory supplied by its caller; the GUI passes the selected project's board folder.
 - **Destructive actions ask first.** Deleting a task, deleting a column or tag, removing a
   worktree, and resetting the board use the app's confirm dialogs. A dirty worktree needs a second
   explicit confirmation before a forced removal.
 - **Board files are sensitive.** They contain task titles, notes, branches, worktree and existing
-  folder paths, and session IDs. Exporting writes them into the project root; decide whether to commit, ignore, or
-  delete the file. Reload treats the file as untrusted input and validates/normalizes it, but a
-  hand-edited `worktreePath` is still data that can be sent to the worktree API during deletion;
-  an existing `directory` is never removed.
+  folder paths, and session IDs. Exporting writes them into the project's board folder; decide
+  whether to commit, ignore, or delete the file. Reload treats the file as untrusted input and
+  validates/normalizes it, but a hand-edited `worktreePath` is still data that can be sent to the
+  worktree API during deletion; an existing `directory` is never removed.
 
 See [`SECURITY.md`](SECURITY.md) for the reporting process, trust boundaries, and the full
 permission list.
@@ -418,8 +425,12 @@ permission list.
 
 - **Desktop only.** The TUI does not load GUI plugin parts, and the plugin needs the desktop's
   worktree/session APIs.
-- **Whole-installation board file.** Export and reload are not project-scoped. A file written from
-  one project contains every project's cards and tags.
+- **A board file is one project.** Export writes only the selected project's cards, columns, and
+  tags. Reload scopes the file to that project and ignores tasks for other folders, including a
+  legacy whole-installation snapshot.
+- **Upgrading from v0.1.1 splits the old global board once.** The split uses each task's project
+  folder. Tasks whose stored `projectRoot` is missing stay addressable by project id but cannot be
+  exported until a folder is known.
 - **Reload is a replacement, not a merge.** Only a missing `sessionID` is carried over for an
   imported task with the same ID. Everything else comes from the file.
 - **Foreign project or server IDs.** Moving a board file to an installation with different OpenCode
@@ -465,7 +476,7 @@ Two common cases:
 
 ```bash
 npm run typecheck   # tsc --noEmit
-npm test            # vitest: 124 cases
+npm test            # vitest: 135 cases
 npm run build       # dist/gui-experimental.cjs
 npm run dev         # vite build --watch
 npm run coverage    # optional coverage run

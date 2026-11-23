@@ -50,13 +50,14 @@ If `src` changed but `dist` did not, the app is loading old code. Rebuild and co
 
 ## Reload replaced the wrong board
 
-This is the destructive path. Reload **replaces the whole board** with the file; it is not a
-merge. Only a missing `sessionID` for an imported task with the same ID is carried over.
+This is the destructive path. Reload **replaces the selected project's board** with the file; it
+is not a merge. Other projects' boards are untouched. Only a missing `sessionID` for an imported
+task with the same ID is carried over.
 
 1. Stop using the board.
-2. In the project you reloaded from, look for `kanban-board.backup.json`. It holds the live board
-   from before that reload, but only if the board had at least one task, you confirmed, and the
-   backup write succeeded.
+2. In the project's board folder, look for `kanban-board.backup.json`. It holds that project's
+   live board from before the reload, but only if the board had at least one task, you confirmed,
+   and the backup write succeeded.
 3. Copy it aside before reusing it, because a later confirmed reload of a non-empty board
    overwrites it:
 
@@ -76,8 +77,8 @@ from an earlier reload; check its timestamp.
 
 ## Reload says the file is missing or invalid
 
-- Reload reads `<selected project root>/kanban-board.json`, not the task worktree and not the
-  folder currently open in a terminal.
+- Reload reads the selected project's board `kanban-board.json` (its root unless you chose another
+  board folder), not a task worktree.
 - Export first to create the file, or copy a known-good snapshot there.
 - Invalid JSON is rejected before the board changes. Validate with
   `node -e 'JSON.parse(require("fs").readFileSync("kanban-board.json","utf8"))'`.
@@ -101,11 +102,11 @@ The toast asking for a restart is the intended message for `rpc.method_not_found
 
 ## Export fails
 
-- The selected project's root must exist and be writable.
+- The project's board folder (its root unless overridden) must exist and be writable.
 - A `.bak` copy failure aborts the export before the board file is replaced; free space and fix
   permissions, then retry.
-- Export writes the **whole installation board** to the selected project's root, not just that
-  project's cards. This is intentional.
+- Export writes **only the selected project's board** to its board folder. Other projects' cards
+  are not included.
 - Exporting into a git project can create an untracked/modified `kanban-board.json`. Decide whether
   to commit it or add it to the project's `.gitignore`.
 - The file can contain titles, notes, branches, worktree paths, and session IDs; treat it as
@@ -207,8 +208,8 @@ separately if it matters to you.
 
 ## Columns differ between projects
 
-- Columns are per project. A project inherits Todo / In progress / Done until you first edit its
-  **Columns** dialog; that edit copies the shared defaults into the project's own set.
+- Columns are per project board. A new board starts with Todo / In progress / Done; edits stay in
+  that board.
 - Changing project A's columns does not change project B.
 - The default column setting is global by ID and falls back to the project's first column when the
   chosen ID is absent from that project.
@@ -218,23 +219,23 @@ separately if it matters to you.
 
 - Tags are **per project**, like columns. Renaming or deleting a tag affects only the selected
   project; other projects keep their own copies.
-- Existing shared tags are copied into each project that has tasks on the first load with this
-  version. An intentionally empty project tag set stays empty.
+- Existing v0.1.1 tags are split into each project board during the one-time migration. An
+  intentionally empty project tag set stays empty.
 - The filter is **AND**: a task must have every selected tag. Select one tag to broaden results.
   Switching projects clears the active tag filter.
 - Clicking a card tag toggles it in the filter. **Clear tags** resets the filter.
 - Deleting a tag removes it from that project's tasks and from the active filter.
-- Reload replaces all per-project tags and assignments with the file's contents. If the file lacks
+- Reload replaces that project's tags and assignments with the file's contents. If the file lacks
   tags, they are gone. Export first.
 - Tags are not reorderable yet.
 
 ## Settings do not persist or reset did too much
 
-- Board and preferences are `Store.global` values in Desktop's plugin storage. They are local to
-  this installation, not to a project.
+- Boards and preferences are `Store.global` values in Desktop's plugin storage. They are local to
+  this installation. Each project folder keeps its own board.
 - **Reset board data** is a global reset: it deletes every task, every tag, every tag assignment,
-  and every per-project column set, then restores Todo / In progress / Done. It does not remove
-  worktrees, stop sessions, or change preferences.
+  and every project's column set, then restores Todo / In progress / Done in each board. It does
+  not remove worktrees, stop sessions, or change preferences.
 - If settings are lost after a restart, check whether `drafts.sqlite` was restored, replaced, or
   cleaned by another tool.
 
@@ -251,7 +252,7 @@ separately if it matters to you.
 
 - Linux is the exercised platform. Windows path normalization is unit tested, but Desktop flows on
   macOS and Windows are not verified.
-- Export/reload is whole-installation, not project-scoped.
+- Export/reload is project-scoped. A file holds only that project's board.
 - A board file from another installation can contain project IDs that do not exist here; those
   tasks remain stored but may not be reachable in the project switcher.
 - No branch deletion, existing-directory tasks, tag reordering, or persistent undo history.

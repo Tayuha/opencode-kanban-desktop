@@ -13,8 +13,7 @@ The ordered runbook for shipping `opencode-kanban-desktop`. The detailed test ca
   checkout through the global `opencode.json`. Publishing to npm is out of scope.
 - **Target:** OpenCode Desktop **2.3.2**, pinned in `package.json`.
 - **Platform exercised:** Linux. macOS and Windows remain follow-ups.
-- **Data model:** one global board per Desktop installation; export/reload is whole-installation,
-  not project-scoped.
+- **Data model:** one board per canonical project folder; export/reload is project-scoped.
 - **Sources of truth:** `TODO.md` for the backlog, [`test-plan.md`](test-plan.md) for manual cases,
   [`acceptance-checklist.md`](acceptance-checklist.md) for the detailed matrix, and
   [`board-file.md`](board-file.md) for export/reload guarantees.
@@ -47,7 +46,7 @@ npm run build
 
 - [ ] `npm ci` completes from the lockfile.
 - [ ] `npm run typecheck` exits 0.
-- [ ] `npm test` passes **124** cases. If the count changed, update README, design, test-plan, and
+- [ ] `npm test` passes **135** cases. If the count changed, update README, design, test-plan, and
       the acceptance checklist before signing.
 - [ ] `npm run build` emits `dist/gui-experimental.cjs`.
 - [ ] A second build is byte-identical:
@@ -127,8 +126,8 @@ Run the listed cases from [`test-plan.md`](test-plan.md). Tick an area only when
 - [ ] K-41 — reload an **exported/current** `kanban-board.json`; confirm when the board has tasks;
       verify cards, columns, tags, assignments, archive state, and positions match the file.
 - [ ] K-42, K-43 — missing and invalid files leave the board untouched.
-- [ ] K-44 — export writes `kanban-board.json` and keeps an existing previous file as `.bak`; the
-      file contains every project's tasks.
+- [ ] K-44 — export writes that project's `kanban-board.json` and keeps an existing previous file
+      as `.bak`; no other project's tasks appear.
 - [ ] K-44b — with auto-export on, column/tag/task changes update `kanban-board.json` without
       pressing Export; `.bak` is the previous snapshot.
 - [ ] K-44c — disabling auto-export stops automatic writes; manual Export still works.
@@ -136,8 +135,12 @@ Run the listed cases from [`test-plan.md`](test-plan.md). Tick an area only when
 - [ ] K-44e — an external edit with unsaved live changes shows a conflict toast and does not clobber the board.
 - [ ] K-45 — a confirmed reload writes `kanban-board.backup.json`; copy it aside, restore it as
       `kanban-board.json`, and reload to verify recovery.
-- [ ] K-46 — export from project A contains project B's cards; project B does not automatically
+- [ ] K-46 — export from project A contains only A's cards; project B does not automatically
       receive a file.
+- [ ] K-49 — the board-folder action writes to the chosen folder and can be reset to the project
+      root.
+- [ ] K-50/K-51 — the v0.1.1 split preserves cards, and a legacy whole-installation file imports
+      only the selected project.
 - [ ] K-47 — an empty-board reload has no confirmation and writes no new backup.
 - [ ] K-35 — tasks, tags, columns, positions, archives, settings, and session links survive a restart.
 - [ ] K-36, K-36b, K-36c, K-36d — project switcher, server id recording, server-scoped boards, duplicate folder records.
@@ -178,7 +181,7 @@ Run the listed cases from [`test-plan.md`](test-plan.md). Tick an area only when
 - [x] Tag the commit `v0.1.1`.
 - [ ] Reinstall from the tag in a disposable profile or directory and smoke-test the panel.
 - [ ] Confirm **Settings → Extensions → Plugins** still lists the plugin after the fresh install.
-- [ ] Write release notes: features, fixes, known limitations, Desktop version, the global board
+- [ ] Write release notes: features, fixes, known limitations, Desktop version, the per-project board
       file behavior, and the reload/backup path.
 - [ ] Keep the previous working checkout available for rollback.
 

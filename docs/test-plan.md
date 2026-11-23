@@ -3,7 +3,7 @@
 Two layers: automated unit tests for everything that does not need a GUI, and a manual Desktop
 plan for the contributions and API calls that only the app can exercise.
 
-The documented v0.1.1 suite has **124 cases**. It covers the pure model, the live registry with a
+The documented v0.1.1 suite has **135 cases**. It covers the pure model, the live registry with a
 fake client, the board-file server code, the store definition, and formatting. It cannot cover
 Desktop's event timing, tabs, dialogs, notifications, clipboard, or worktree API.
 
@@ -19,6 +19,15 @@ npm run build
 
 The build is expected to produce `dist/gui-experimental.cjs`; a second build should be
 byte-identical and the bundle should require only the five shared modules.
+
+### `model/boards.test.ts` — 11 cases
+
+- normalizes project keys and Windows paths
+- splits the legacy global board by project folder
+- scopes an imported file to one project and ignores other folders
+- resolves a root-less migrated board by project id
+- writes board maps immutably and finds tasks across boards
+- uses a board-folder override or the project root
 
 ### `model/board.test.ts` — 60 cases
 
@@ -43,7 +52,7 @@ byte-identical and the bundle should require only the five shared modules.
 - undo-delete clamps a deleted column and drops deleted tags
 - undo-delete ignores a task that already exists
 - add, rename, recolor, reorder, and delete a project's columns
-- a project's first edit copies the shared defaults; other projects stay unchanged
+- a new project board starts with the default columns; edits stay in that board
 - task moves reject a column owned by another project
 - normalization validates each project's column set and drops empty sets
 - records the server id and scopes positions per server
@@ -55,7 +64,7 @@ byte-identical and the bundle should require only the five shared modules.
 - preserves the server id through normalization
 - the default density is comfortable and the compact copy keys exist
 - per-project tag sets stay independent; deleting a tag affects only its project
-- shared tags migrate into each project with tasks; empty tag sets are preserved
+- legacy shared tags seed a project with tasks; empty tag sets are preserved
 - task creation and edits reject tags from another project
 - normalize repairs duplicates, orphans, and empty data
 - normalize seeds defaults
@@ -187,7 +196,7 @@ cases.
 | K-09 | Drag a card to another column and between two cards | Card moves, order is correct, counts update |
 | K-10 | Select a card, press Shift+Right and Shift+Up | Task changes column, then reorders within the column |
 | K-11 | Open **Columns** on project A: add, rename, recolor, move up/down | Project A updates live; tasks follow their column |
-| K-11b | Add a column in project A, then switch the panel to project B | Project A keeps its column; project B keeps the shared defaults or its own set |
+| K-11b | Add a column in project A, then switch the panel to project B | Project A keeps its column; project B keeps its own set or the default columns |
 | K-11c | Open the task dialog in a project with custom columns, then switch projects | Column options follow the selected project; a choice missing from the target project resets to its first column |
 | K-11d | Rename a tag in project A, then switch to project B | Project A shows the new name; project B keeps its own tag names |
 | K-12 | Delete a column with tasks | Confirmation; tasks move to the first remaining column |
@@ -227,9 +236,9 @@ cases.
 | K-33 | Change alignment, width, density, poll interval, default column, auto-export, auto-reload | Board and refresh behavior follow; changes apply without a restart and survive one |
 | K-33b | Toggle compact columns from the header, `C`, the palette, and settings | Cards become one-line rows with a status dot; tags and branch/worktree details hide; the setting survives a restart |
 | K-33c | Open **Help** at the narrowest panel width | `CTRL ALT SHIFT K` and other key chips stay in the key column; descriptions do not overlap |
-| K-34 | **Reset board data** | Confirm; tasks, tags, tag assignments, and every per-project column set are gone; the three default columns return; worktrees, sessions, and preferences remain |
+| K-34 | **Reset board data** | Confirm; tasks, tags, tag assignments, and every project's column set are gone; the three default columns return in each board; worktrees, sessions, and preferences remain |
 | K-35 | Restart Desktop with several tasks | Board, tags, session links, columns, positions, archived cards, and settings persist |
-| K-36 | Switch projects in the panel header | The other project's board and columns load; creating a task targets that project |
+| K-36 | Switch projects in the panel header | The other project's entire board, columns, tags, and archive load; the previous project's board is unchanged; creating a task targets that project |
 | K-36b | Create a task and export the board | The exported task contains the mounted server's `serverID`; a legacy task without one is claimed when its project opens |
 | K-36c | Open two servers that expose the same project ID (if available) | Cards, live status, and the pill do not mix tasks from the other server |
 | K-36d | When OpenCode has two project records for the same folder (for example cache-stats), open the project switcher | The folder appears once; selecting it uses the routed project id and its tasks |
@@ -240,15 +249,18 @@ cases.
 | K-41 | Export a current board, then reload it from the same project | If the board has any task, a confirmation appears; after confirming, the cards/tags/columns match the exported file; the backup exists. Do not use a stale seed |
 | K-42 | Remove the file, then press reload | A toast says the file is missing; the board is unchanged |
 | K-43 | Put invalid JSON in the file, then press reload | A toast rejects the file; the board is unchanged |
-| K-44 | Export with an existing `kanban-board.json`, then export again | `kanban-board.json` matches the live board; the previous file is kept as `kanban-board.json.bak`; tasks from every project are present |
-| K-44b | With auto-export on, move a card, rename a column, add a tag, and edit a task; wait two seconds each time | `kanban-board.json` updates without pressing Export; no success toast; `.bak` holds the previous snapshot |
+| K-44 | Export with an existing project `kanban-board.json`, then export again | `kanban-board.json` matches that project's live board; the previous file is kept as `kanban-board.json.bak`; no other project's tasks appear |
+| K-44b | With auto-export on, move a card, rename a column, add a tag, and edit a task; wait two seconds each time | That project's `kanban-board.json` updates without pressing Export; no success toast; `.bak` holds the previous snapshot |
 | K-44c | Turn **Auto-export board** off, change the board, wait, then press Export | The file does not change automatically; manual Export still writes it and reports the paths |
 | K-44d | With auto-reload on and no unsaved live edits, edit `kanban-board.json` externally (move a card or rename a tag), wait three seconds | The live board updates automatically with a confirmation toast; manual Reload is not needed |
 | K-44e | Make a live board edit, then change the file externally before auto-export writes, wait | Auto-reload shows one conflict toast and leaves the live board untouched; manual Reload can still import the file |
-| K-45 | Reload after exporting; inspect the project root | `kanban-board.backup.json` holds the pre-reload live board; copy it aside, use it as `kanban-board.json`, and reload to recover |
-| K-46 | With cards in two projects, export from project A, then inspect project A's file | The file contains the tasks, tags, and columns of both projects; project B's root does not automatically get a file |
+| K-45 | Reload after exporting; inspect the project's board folder | `kanban-board.backup.json` holds that project's pre-reload board; copy it aside, use it as `kanban-board.json`, and reload to recover |
+| K-46 | With cards in two projects, export from project A, then inspect project A's file | The file contains only A's tasks, tags, columns, and archive state; project B's cards are absent; project B's root does not automatically get a file |
 | K-47 | With an empty board, press reload with a valid file | No confirmation and no new `kanban-board.backup.json`; the file loads |
 | K-48 | Delete a task's pinned session outside the board, then refresh | The pin is cleared after the server confirms it is missing; a toast explains; the card shows no session and **Unlink** disappears; Link/New session can attach another |
+| K-49 | Click the folder icon, choose a different board folder, change the board, then export | The file is written in the chosen folder; the project root is untouched; the choice survives a restart; choosing **Project root** reverses it |
+| K-50 | Upgrade a v0.1.1 installation whose board has tasks from two projects | Each project shows only its own cards, columns, and tags; the old global file still loads only the current project on reload |
+| K-51 | Put a legacy whole-installation `kanban-board.json` in project A and reload | Only A's tasks are imported; the other project's cards stay out of A's board; the toast reports A's imported task count |
 | T-01 | **Tags** → add three tags with different colors in project A | The filter row and task dialog show them for A; project B keeps its own tags; cards show assigned tags |
 | T-02 | Assign tags in the task dialog, then save | Card shows up to 3 tags; detail and archive show all |
 | T-03 | Click a tag on a card | That tag toggles in the filter row |

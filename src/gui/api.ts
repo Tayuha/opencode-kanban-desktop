@@ -44,10 +44,14 @@ export type KanbanServices = {
   openPanel(session: SessionRef): void
   openFullBoard(session: MountedSession): void
   openTaskDialog(session: MountedSession, projectID: string, task?: Task, initialCategoryID?: string): void
-  openColumnsDialog(projectID: string, projectName?: string): void
-  openTagsDialog(projectID: string, projectName?: string): void
+  openColumnsDialog(projectID: string, projectName?: string, projectRoot?: string): void
+  openTagsDialog(projectID: string, projectName?: string, projectRoot?: string): void
   projects(session: MountedSession): ProjectRow[]
   projectFor(session: MountedSession): ProjectRow | undefined
+  /** One project's board, keyed by its canonical folder. */
+  boardFor(root: string | undefined, projectID?: string): Board
+  /** Writes one project's board and schedules its own auto-export. */
+  saveBoard(root: string | undefined, next: Board, projectID?: string): void
   target(session: MountedSession, projectID: string): LiveTarget
   createTask(session: MountedSession, input: CreateTaskArgs): Promise<Task>
   openTask(session: MountedSession, task: Task, mode?: OpenMode): Promise<void>
@@ -71,6 +75,8 @@ export type KanbanServices = {
   reloadBoard(session: MountedSession, projectID: string): Promise<void>
   /** Writes the current board to `<project>/kanban-board.json`, keeping the previous file as .bak. */
   exportBoard(session: MountedSession, projectID: string): Promise<void>
+  /** Chooses the folder that holds this project's kanban-board.json. */
+  chooseBoardFolder(session: MountedSession, projectID: string): Promise<void>
   branches(session: MountedSession, root: string): Promise<BranchList>
   vcs(session: MountedSession, task: Task): Promise<VcsSummary | undefined>
   reveal(path: string): Promise<void>

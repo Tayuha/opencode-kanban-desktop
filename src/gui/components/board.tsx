@@ -22,6 +22,7 @@ import type { MountedSession } from "@opencode/plugin/gui"
 type BoardViewProps = {
   session: MountedSession
   projectID: string
+  projectRoot: string
   serverID: string
   projects: ProjectRow[]
   query: string
@@ -42,14 +43,14 @@ function errorText(error: unknown): string {
 export function BoardView(props: BoardViewProps) {
   const ctx = usePlugin<typeof definition>()
   const ui = ctx.ui
-  const board = () => ctx.stores.board.value
+  const board = () => props.services.boardFor(props.projectRoot, props.projectID)
   const prefs = () => ctx.stores.prefs.value
   const compact = () => (prefs().density ?? "comfortable") === "compact"
   const [dragging, setDragging] = createSignal<string | undefined>()
   const [over, setOver] = createSignal<string | undefined>()
 
   const save = (next: Board) => {
-    ctx.stores.board.set(next)
+    props.services.saveBoard(props.projectRoot, next, props.projectID)
     props.services.live.invalidate(props.session.server.id, props.projectID)
   }
 

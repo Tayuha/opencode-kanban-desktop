@@ -46,6 +46,8 @@ const BoardSchema = Schema.Struct({
   tasks: Schema.Array(TaskSchema),
 })
 
+const BoardsSchema = Schema.Record(Schema.String, BoardSchema)
+
 const PrefsSchema = Schema.Struct({
   view: Schema.Literals(["board", "detail", "archive", "help"]),
   alignment: Schema.Literals(["fit", "scroll"]),
@@ -62,14 +64,20 @@ const PrefsSchema = Schema.Struct({
   autoPrompt: Schema.Boolean,
   initialPrompt: Schema.String,
   lastProjectID: Schema.optional(Schema.String),
+  lastBoardKey: Schema.optional(Schema.String),
+  boardDirs: Schema.optional(Schema.Record(Schema.String, Schema.String)),
 })
 
 export type StoredPrefs = typeof PrefsSchema.Type
 export type StoredBoard = typeof BoardSchema.Type
+export type StoredBoards = typeof BoardsSchema.Type
 
 export const definition = Plugin.define({
   stores: {
+    /** Deprecated: the v0.1.1 global board, read once and split during migration. */
     board: Store.global(BoardSchema, defaultBoard()),
+    /** One board per canonical project folder; see model/boards.ts. */
+    boards: Store.global(BoardsSchema, {}),
     prefs: Store.global(PrefsSchema, DEFAULT_PREFS),
   },
   i18n: {
@@ -114,6 +122,7 @@ export const definition = Plugin.define({
       "action.comfortable": "Comfortable columns",
       "action.reloadBoard": "Reload board",
       "action.exportBoard": "Export board",
+      "action.boardFolder": "Board file folder",
       "action.tags": "Tags",
       "action.copy": "Copy",
       "action.reveal": "Show in file manager",
@@ -183,8 +192,19 @@ export const definition = Plugin.define({
       "board.archivedHint": "Archived tasks live in the Archive view.",
       "board.drop": "Drop here",
       "board.newColumnHint": "Add a column from the Columns button.",
-      "board.reload.confirm.title": "Replace the current board?",
-      "board.reload.confirm.body": "Loading kanban-board.json replaces every task, column, tag, and tag assignment currently on the board. A backup of the live board is written to kanban-board.backup.json first. Session bindings are kept when the file does not name one.",
+      "board.reload.confirm.title": "Replace this project's board?",
+      "board.reload.confirm.body": "Loading this project's kanban-board.json replaces its tasks, columns, tags, and tag assignments. A backup of the live board is written to kanban-board.backup.json first. Session bindings are kept when the file does not name one. Tasks for other projects in the file are ignored.",
+      "boardFolder.title": "Board file folder",
+      "boardFolder.placeholder": "Choose where this project's board file lives",
+      "boardFolder.group": "Board file",
+      "boardFolder.root": "Project root",
+      "boardFolder.root.description": "Use kanban-board.json in the project folder.",
+      "boardFolder.pick": "Choose another folder…",
+      "boardFolder.pick.description": "Use kanban-board.json in a folder you pick.",
+      "boardFolder.saved": "Board folder updated.",
+      "boardFolder.reset": "Board folder reset to the project root.",
+      "boardFolder.unavailable": "Choosing a board folder is only available in OpenCode Desktop.",
+      "boardFolder.failed": "The board folder could not be chosen.",
 
       "card.branch": "Branch",
       "card.worktree": "Worktree",
@@ -316,8 +336,8 @@ export const definition = Plugin.define({
       "help.status.none": "No session exists in the task's worktree yet.",
       "help.todos": "Todos come from the session's todo tool when OpenCode records one. They are hidden otherwise.",
       "help.worktrees": "Worktrees use OpenCode's native worktree API. No shell runs, and no session is ever killed.",
-      "help.storage": "The board lives in this Desktop installation's plugin storage; it is not shared with the TUI.",
-      "help.reload": "Reload board backs up a non-empty live board, then replaces it with kanban-board.json from the project root. Export board writes the file.",
+      "help.storage": "Each project folder keeps its own board in this Desktop installation's plugin storage; boards are not shared across projects and are not shared with the TUI.",
+      "help.reload": "Reload board backs up this project's live board, then replaces it with that project's kanban-board.json. Export board writes this project's file. Tasks for other projects are never included.",
 
       "settings.title": "Kanban",
       "settings.description": "How the board, sessions, and notifications behave.",
@@ -332,10 +352,10 @@ export const definition = Plugin.define({
       "settings.density.description": "Compact hides tags, branches, and card details so more columns and tasks fit at once.",
       "settings.poll": "Refresh interval",
       "settings.poll.description": "A safety poll on top of session events.",
-      "settings.autoExport": "Auto-export board",
+      "settings.autoExport": "Auto-export this project's board",
+      "settings.autoExport.description": "Write this project's board changes to its kanban-board.json automatically; Reload stays manual.",
       "settings.autoReload": "Auto-reload external changes",
-      "settings.autoReload.description": "Apply external edits to kanban-board.json automatically; skipped when the live board has unsaved changes.",
-      "settings.autoExport.description": "Write board changes to kanban-board.json automatically; Reload stays manual.",
+      "settings.autoReload.description": "Apply external edits to this project's kanban-board.json automatically; skipped when the live board has unsaved changes.",
       "settings.defaultCategory": "Default column",
       "settings.defaultCategory.description": "The column a new task starts in when the project has it; otherwise the project's first column.",
       "settings.openMode": "Opening a task",
@@ -367,9 +387,9 @@ export const definition = Plugin.define({
       "settings.pill": "Composer pill",
       "settings.pill.description": "Show the project's running tasks above the composer.",
       "settings.reset": "Reset board data",
-      "settings.reset.description": "Delete every task, tag, and custom column in this installation.",
-      "settings.reset.confirm": "Reset the board?",
-      "settings.reset.body": "Every task, tag, tag assignment, and custom column is deleted. Worktrees and sessions stay on disk.",
+      "settings.reset.description": "Delete every task, tag, and custom column in every project board in this installation.",
+      "settings.reset.confirm": "Reset every project board?",
+      "settings.reset.body": "Every project's tasks, tags, tag assignments, and custom columns are deleted. Board files on disk, worktrees, and sessions stay.",
       "settings.reset.done": "Board reset.",
       "interval.0": "Off",
       "interval.5000": "5 seconds",
@@ -444,8 +464,8 @@ export const definition = Plugin.define({
       "toast.pinFailed": "The session is not available in this window yet.",
       "toast.reset": "Board reset.",
       "toast.boardReloaded": "Board reloaded",
-      "toast.boardReloaded.body": "{{count}} tasks loaded from kanban-board.json.",
-      "toast.boardReloadMissing": "No kanban-board.json in the project root.",
+      "toast.boardReloaded.body": "{{count}} tasks loaded from this project's kanban-board.json.",
+      "toast.boardReloadMissing": "No kanban-board.json for this project.",
       "toast.boardReloadInvalid": "kanban-board.json is not a valid board file.",
       "toast.boardReloadFailed": "Could not reload the board.",
       "toast.boardReloadUnavailable": "The board file RPC is unavailable. Restart OpenCode Desktop.",

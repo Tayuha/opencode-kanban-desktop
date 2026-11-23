@@ -50,6 +50,9 @@ export type Board = {
   tasks: readonly Task[]
 }
 
+/** Every project folder owns one board, keyed by its canonical project root. */
+export type BoardMap = Readonly<Record<string, Board>>
+
 export type BoardView = "board" | "detail" | "archive" | "help"
 export type Alignment = "fit" | "scroll"
 export type Density = "comfortable" | "compact"
@@ -71,6 +74,10 @@ export type Prefs = {
   autoPrompt: boolean
   initialPrompt: string
   lastProjectID?: string
+  /** The board key last shown in the panel, used by settings and palette commands. */
+  lastBoardKey?: string
+  /** Optional board-file folders, keyed by the same project key as the board map. */
+  boardDirs?: Readonly<Record<string, string>>
 }
 
 export type ProjectRow = {
