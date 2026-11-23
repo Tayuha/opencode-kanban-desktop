@@ -1375,11 +1375,41 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
         exportDirs.set(key, target)
         written.delete(key)
         await exportKey(key, true)
+
+        let cleaned = false
+        if (previous !== target) {
+          const remove = await ctx.dialogs.confirm({
+            title: ctx.t("boardFolder.remove.title"),
+            description: ctx.t("boardFolder.remove.description", { folder: previous }),
+            confirm: ctx.t("boardFolder.remove.confirm"),
+            danger: true,
+          })
+          if (remove) {
+            try {
+              await ctx.client.rpc(KanbanBoard).remove({ directory: previous })
+              cleaned = true
+            } catch (error) {
+              const type = rpcErrorType(error)
+              notify(
+                "error",
+                type === "rpc.method_not_found" || type === "rpc.unavailable"
+                  ? ctx.t("toast.boardReloadUnavailable")
+                  : ctx.t("boardFolder.removeFailed"),
+                errorText(error),
+              )
+            }
+          }
+        }
+
         notify(
           "success",
           directory ? ctx.t("boardFolder.saved") : ctx.t("boardFolder.reset"),
           previous !== target
-            ? `${target}\n${ctx.t("boardFolder.previous")}: ${previous}`
+            ? `${target}\n${
+                cleaned
+                  ? `${ctx.t("boardFolder.removed")}: ${previous}`
+                  : `${ctx.t("boardFolder.previous")}: ${previous}`
+              }`
             : target,
         )
       } catch (error) {

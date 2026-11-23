@@ -20,7 +20,7 @@ board; this file is the durable release view. The gate to run is
 
 Implemented and unit-tested:
 
-- One CommonJS GUI bundle; 135 tests; typecheck clean; deterministic build
+- One CommonJS GUI bundle; 137 tests; typecheck clean; deterministic build
 - Server part and board file RPC (load and save) with atomic writes
 - Board, columns, archive, search, keyboard and drag operations
 - Git worktrees and sessions through the OpenCode API
@@ -94,11 +94,11 @@ Tick every item before tagging a release. Each maps to a card on the board.
 
 ## Done
 
-Implemented and covered by the 135 automated tests:
+Implemented and covered by the 137 automated tests:
 
 - [x] Bundle builds as one CommonJS file (`dist/gui-experimental.cjs`)
 - [x] `npm run typecheck` is clean
-- [x] `npm test` passes 135 cases
+- [x] `npm test` passes 137 cases
 - [x] Bundle requires only shared modules (`effect`, GUI, rpc, solid-js, solid-js/web)
 - [x] Server part loads; plugin id is `nmdra.kanban-desktop`
 - [x] Board file RPC (load/save), Export board, Reload board, and pre-reload backup
@@ -124,7 +124,7 @@ Implemented and covered by the 135 automated tests:
 - [x] Upgrade/release plan documented in `docs/upgrading.md` (2026-11-23)
 - [x] Documentation audited and expanded; AGENTS/upgrading/README/design/test docs current (2026-11-23)
 - [x] AI agent guide documented in `AGENTS.md` (2026-11-23)
-- [x] Per-project boards and project-scoped board files implemented; 135 tests pass (2026-11-23)
+- [x] Per-project boards and project-scoped board files implemented; 137 tests pass (2026-11-23)
 - [ ] Per-project board split, project switching, and board-folder override verified in Desktop
 - [ ] v0.1.2 release closed, version bumped, changelog finalized, tag created
 

@@ -8,7 +8,7 @@ The board file's exact behavior is in [`board-file.md`](board-file.md).
 
 - [ ] `npm ci` from a clean checkout
 - [ ] `npm run typecheck` exits 0
-- [ ] `npm test` passes every case (**135** at the time of writing; update the docs if the count changes)
+- [ ] `npm test` passes every case (**137** at the time of writing; update the docs if the count changes)
 - [ ] `npm run build` emits `dist/gui-experimental.cjs`
 - [ ] A second build is byte-identical (`cp dist/gui-experimental.cjs /tmp/a && npm run build && cmp /tmp/a dist/gui-experimental.cjs`)
 - [ ] The bundle requires only `effect`, `@opencode/plugin/gui`, `@opencode/plugin/rpc`, `solid-js`, and `solid-js/web`
@@ -122,7 +122,7 @@ The board file's exact behavior is in [`board-file.md`](board-file.md).
 - [ ] The project switcher follows the routed session's project on open
 - [ ] Export writes only the selected project's board (tasks, tags, columns, archived cards) to its board folder
 - [ ] A project's board folder defaults to its root and can be changed with the folder action; the choice survives a restart
-- [ ] Changing or resetting the board folder writes the current board to the new folder and leaves the old folder's file in place
+- [ ] Changing or resetting the board folder writes the current board to the new folder and offers to remove only the old folder's fixed snapshot files
 - [ ] Selecting a project with a board but no board file creates its snapshot; selecting one with an existing file does not overwrite it
 - [ ] Export keeps an existing previous file as `kanban-board.json.bak`
 - [ ] Exporting into a git project may create an untracked/modified board file; the doc warns about it

@@ -17,7 +17,8 @@ keeps the selected project's file current after its board changes unless the pre
 - The folder icon in the panel header opens **Board file folder**. Choose **Project root** or a
   folder with `ctx.desktop.pick`. The choice is stored per project in the preferences. Changing or
   resetting the folder immediately writes the current board there (an existing file is kept as
-  `.bak`). The previous folder's file is not moved or deleted.
+  `.bak`). After the new file is written, Desktop offers to remove the previous folder's
+  `kanban-board.json`, `.bak`, and `kanban-board.backup.json`; declining leaves them in place.
 - A project's board is keyed by its canonical folder. Two OpenCode project records for the same
   folder share one board and one default file.
 - Do not point several projects at the same folder. They would take turns overwriting one file.
@@ -345,11 +346,15 @@ The GUI calls the plugin's RPC through the local OpenCode server:
 - `nmdra.kanban-desktop.board.load({ directory })` returns `{ path, json }`.
 - `nmdra.kanban-desktop.board.save({ directory, json, target? })` returns `{ path, backupPath? }`.
   `target` is `"board"` (default) or `"backup"`.
+- `nmdra.kanban-desktop.board.remove({ directory })` removes only the three fixed snapshot files
+  and returns `{ paths }`. The GUI calls it only after the confirmation offered by a board-folder
+  change or reset.
 
 The RPC performs no authentication of its own beyond the local server's RPC surface. It trusts the
-absolute folder supplied by the caller and writes only the fixed filenames there. Any local client
-able to call the RPC could therefore write those three filenames into another existing absolute
-folder. The plugin's own GUI passes the selected project's board folder.
+absolute folder supplied by the caller and touches only the fixed filenames there. Any local client
+able to call the RPC could therefore write or remove those three filenames in another existing
+absolute folder. The plugin's own GUI passes the selected project's previous or current board
+folder.
 
 ## Limits
 

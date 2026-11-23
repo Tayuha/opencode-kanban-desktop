@@ -27,7 +27,7 @@ Do not tag yet. Add v0.1.2 changes here until the release is closed; the package
   the board updated.
 - Detail labels no longer render literal `{{time}}` placeholders; the Changes empty copy no longer
   says “worktree” for tasks without one.
-- Added 11 board-map tests; the suite now has 135 cases.
+- Added 11 board-map tests and 2 board-file removal tests; the suite now has 137 cases.
 
 ## v0.1.1 — 2026-11-22
 

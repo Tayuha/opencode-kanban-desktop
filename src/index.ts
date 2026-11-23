@@ -1,6 +1,6 @@
 import { Plugin } from "@opencode/plugin"
 import { KanbanBoard } from "./rpc.ts"
-import { readBoardFile, writeBoardFile } from "./server/board-file.ts"
+import { readBoardFile, removeBoardFiles, writeBoardFile } from "./server/board-file.ts"
 
 /**
  * The board itself lives in the Desktop GUI's plugin storage. The server part
@@ -63,6 +63,19 @@ export default Plugin.define({
           path: result.path,
           message: result.message,
         })
+      },
+
+      remove: async (input, context) => {
+        const directory = (input as { directory?: unknown }).directory
+        if (typeof directory !== "string" || !directory) {
+          return context.error("invalid", "A board directory is required.", {
+            message: "A board directory is required.",
+          })
+        }
+
+        const result = await removeBoardFiles(directory, context.signal)
+        if (result.ok) return { paths: result.paths }
+        return context.error(result.code, result.message, { message: result.message })
       },
     })
   },

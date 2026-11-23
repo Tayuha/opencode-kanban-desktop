@@ -432,8 +432,9 @@ leaves the session bound and open and reports a toast.
   target for another project's task.
 - **Board files are per project.** The default is `<projectRoot>/kanban-board.json`; the panel's
   folder action stores an optional override per project. Changing or resetting the folder exports
-  the current board to the new folder and leaves the old file in place. A reload scopes the file to
-  the project, so a legacy whole-installation snapshot cannot add another project's cards.
+  the current board to the new folder, then offers to remove the old folder's snapshots. A reload
+  scopes the file to the project, so a legacy whole-installation snapshot cannot add another
+  project's cards.
 - **Compact density is a reading mode.** It keeps the same board DOM and interactions but hides tags,
   branch/worktree lines, and card details, clamps cards to one line, and caps scroll-mode columns at
   220px. The toggle lives in the panel header, the `C` key, the palette, and settings.
@@ -493,7 +494,7 @@ leaves the session bound and open and reports a toast.
 
 ## Testing
 
-The documented v0.1.1 suite has 135 vitest cases:
+The documented v0.1.1 suite has 137 vitest cases:
 
 | File | Cases | Focus |
 |---|---:|---|
@@ -504,7 +505,7 @@ The documented v0.1.1 suite has 135 vitest cases:
 | `model/boards.test.ts` | 11 | project keys, lookup/write immutability, migration split, project scoping, board folders |
 | `model/select.test.ts` | 7 | text/tag filters, server scope, column/archive selection, neighbours, status keys |
 | `data/live.test.ts` | 8 | derived live state, server-scoped tasks, pinned-session hydration, archived pins, deleted-pin reporting, missing-pin isolation, running→idle callback, stale fallback with a fake client |
-| `server/board-file.test.ts` | 9 | read/write, missing/invalid/oversized/aborted, `.bak`, separate backup |
+| `server/board-file.test.ts` | 11 | read/write/remove, missing/invalid/oversized/aborted, `.bak`, separate backup |
 | `definition.test.ts` | 3 | store declaration, key copy, non-empty copy |
 | `format.test.ts` | 7 | cost, IDs, basenames, plurals, relative time, clock/diff |
 

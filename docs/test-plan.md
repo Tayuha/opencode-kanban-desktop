@@ -3,7 +3,7 @@
 Two layers: automated unit tests for everything that does not need a GUI, and a manual Desktop
 plan for the contributions and API calls that only the app can exercise.
 
-The documented v0.1.1 suite has **135 cases**. It covers the pure model, the live registry with a
+The documented v0.1.1 suite has **137 cases**. It covers the pure model, the live registry with a
 fake client, the board-file server code, the store definition, and formatting. It cannot cover
 Desktop's event timing, tabs, dialogs, notifications, clipboard, or worktree API.
 
@@ -136,7 +136,7 @@ byte-identical and the bundle should require only the five shared modules.
 - running → idle transition callback
 - failed reads keep the last snapshot and mark it stale
 
-### `server/board-file.test.ts` — 9 cases
+### `server/board-file.test.ts` — 11 cases
 
 - reads a valid board file
 - reports a missing file
@@ -258,8 +258,8 @@ cases.
 | K-46 | With cards in two projects, export from project A, then inspect project A's file | The file contains only A's tasks, tags, columns, and archive state; project B's cards are absent; project B's root does not automatically get a file |
 | K-47 | With an empty board, press reload with a valid file | No confirmation and no new `kanban-board.backup.json`; the file loads |
 | K-48 | Delete a task's pinned session outside the board, then refresh | The pin is cleared after the server confirms it is missing; a toast explains; the card shows no session and **Unlink** disappears; Link/New session can attach another |
-| K-49 | Click the folder icon, choose a different board folder, change the board, then export | The file is written in the chosen folder; the choice survives a restart. Reset to **Project root** and confirm the current board is written to the root again; the old folder's file is left in place |
-| K-49b | Reset the board folder to **Project root** after using another folder | The root `kanban-board.json` is refreshed from the live board, an existing root file is kept as `.bak`, and the toast names the old folder whose file was left behind |
+| K-49 | Click the folder icon, choose a different board folder, change the board, then export | The file is written in the chosen folder; the choice survives a restart. Reset to **Project root**; the current board is written to the root again and the old folder's files are offered for removal |
+| K-49b | Reset the board folder to **Project root** after using another folder | The root `kanban-board.json` is refreshed from the live board, an existing root file is kept as `.bak`, and the confirm asks to remove only the old folder's three fixed snapshot files |
 | K-52 | Select a project that has a board but no `kanban-board.json` with auto-export on | The file is created after the debounce with only that project's board; selecting a project whose file exists does not overwrite it |
 | K-50 | Upgrade a v0.1.1 installation whose board has tasks from two projects | Each project shows only its own cards, columns, and tags; the old global file still loads only the current project on reload |
 | K-51 | Put a legacy whole-installation `kanban-board.json` in project A and reload | Only A's tasks are imported; the other project's cards stay out of A's board; the toast reports A's imported task count |

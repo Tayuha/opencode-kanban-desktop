@@ -79,7 +79,7 @@ npm run build
 npm audit --audit-level=high
 ```
 
-- Current suite: **135 tests**.
+- Current suite: **137 tests**.
 - Build twice and compare byte-for-byte when touching the bundle:
   `cp dist/gui-experimental.cjs /tmp/a.cjs && npm run build && cmp /tmp/a.cjs dist/gui-experimental.cjs`
 - The bundle must require only `effect`, `@opencode/plugin/gui`, `@opencode/plugin/rpc`,
@@ -169,8 +169,9 @@ restart. Never rewrite a released tag. The full runbook is [`docs/upgrading.md`]
   plugin.
 - Worktrees use OpenCode's native API only.
 - No deleting sessions; no removing worktrees without user confirmation; never delete branches.
-- The board RPC writes only `kanban-board.json`, `kanban-board.json.bak`, and
-  `kanban-board.backup.json`.
+- The board RPC reads and writes only `kanban-board.json`, `kanban-board.json.bak`, and
+  `kanban-board.backup.json`; its `remove` method removes only those three fixed files after a
+  folder-cleanup confirmation.
 - Keep React/Solid style, naming, and existing component patterns.
 - Do not edit `node_modules`, `dist` by hand, or released tags. Rebuild `dist` instead.
 - Do not mark a verification card Done without the user confirming the Desktop pass.

@@ -12,7 +12,7 @@ OpenCode Desktop's native project, worktree, session, tab, dialog, and notificat
 
 **Release scope:** local/private v0.1.1 for OpenCode Desktop 2.3.2. The package is `private: true`
 and installs from this checkout; it is not published to npm. The documented v0.1.1 baseline passes
-`typecheck`, 135 unit tests, and a deterministic single-file GUI build.
+`typecheck`, 137 unit tests, and a deterministic single-file GUI build.
 
 ## Requirements
 
@@ -286,8 +286,8 @@ chooses the folder, which defaults to its root.
   project that has a board but no `kanban-board.json` gets one after the debounce. An existing file
   is left alone; use **Reload board** to import it.
 - **Changing or resetting the board folder writes the current board to the new folder.** An
-  existing file there is kept as `.bak`. The previous folder's file is left in place; delete it
-  yourself if you no longer need it.
+  existing file there is kept as `.bak`. Desktop then offers to remove the previous folder's three
+  snapshot files; declining leaves them in place.
 - **Export board** writes immediately and reports the path and backup path. It uses the project's
   board folder.
 - **Auto-reload is on by default.** While a session is active, the plugin checks the selected
@@ -482,7 +482,7 @@ Two common cases:
 
 ```bash
 npm run typecheck   # tsc --noEmit
-npm test            # vitest: 135 cases
+npm test            # vitest: 137 cases
 npm run build       # dist/gui-experimental.cjs
 npm run dev         # vite build --watch
 npm run coverage    # optional coverage run

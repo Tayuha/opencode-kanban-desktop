@@ -93,6 +93,38 @@ export const KanbanBoard = Rpc.define({
         },
       },
     },
+    remove: {
+      input: {
+        type: "object",
+        properties: {
+          directory: { type: "string" },
+        },
+        required: ["directory"],
+        additionalProperties: false,
+      },
+      output: {
+        type: "object",
+        properties: {
+          paths: { type: "array", items: { type: "string" } },
+        },
+        required: ["paths"],
+        additionalProperties: false,
+      },
+      errors: {
+        invalid: {
+          type: "object",
+          properties: { message: { type: "string" } },
+          required: ["message"],
+          additionalProperties: false,
+        },
+        remove_failed: {
+          type: "object",
+          properties: { message: { type: "string" } },
+          required: ["message"],
+          additionalProperties: false,
+        },
+      },
+    },
   },
   events: {},
 })

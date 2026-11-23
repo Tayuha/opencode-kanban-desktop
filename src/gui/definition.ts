@@ -203,7 +203,12 @@ export const definition = Plugin.define({
       "boardFolder.pick.description": "Write this project's current board to kanban-board.json in a folder you pick; an existing file is kept as .bak.",
       "boardFolder.saved": "Board folder updated.",
       "boardFolder.reset": "Board folder reset to the project root.",
-      "boardFolder.previous": "The previous folder's kanban-board.json was left in place",
+      "boardFolder.previous": "The previous folder's files were left at",
+      "boardFolder.removed": "Old board files removed from",
+      "boardFolder.remove.title": "Remove the old board file?",
+      "boardFolder.remove.description": "Remove kanban-board.json, its .bak, and kanban-board.backup.json from {{folder}}? The live board and the new folder's file are kept.",
+      "boardFolder.remove.confirm": "Remove old files",
+      "boardFolder.removeFailed": "The old board files could not be removed.",
       "boardFolder.unavailable": "Choosing a board folder is only available in OpenCode Desktop.",
       "boardFolder.failed": "The board folder could not be chosen.",
 
