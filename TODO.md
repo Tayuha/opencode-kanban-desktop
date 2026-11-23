@@ -6,6 +6,7 @@ board; this file is the durable release view. The gate to run is
 [`docs/test-plan.md`](docs/test-plan.md) and [`docs/acceptance-checklist.md`](docs/acceptance-checklist.md).
 
 - **Target:** local/private v0.1.x on OpenCode Desktop **2.3.2**
+- **Upgrade plan:** [`docs/upgrading.md`](docs/upgrading.md)
 - **Platform exercised:** Linux
 - **Last updated:** 2026-11-20
 
@@ -112,10 +113,9 @@ Implemented and covered by the 122 automated tests:
 - [x] Existing-folder task mode and linked-session prefill verified in Desktop (2026-11-20)
 - [x] Help key-column overlap fixed and verified in Desktop (2026-11-20)
 - [x] Completion notifications verified in Desktop (2026-11-20)
+- [x] Upgrade/release plan documented in `docs/upgrading.md` (2026-11-23)
 
 ## P1 — follow-ups
-
-- [ ] Plan the v0.1.1 upgrade for existing local-checkout installs (card `todo/update-plan`)
 
 - [ ] Pin closed or arbitrary sessions, beyond the open-session linker
 - [ ] Verify worktree-removal delete has no Undo in a real git project (deferred; main project is non-git)

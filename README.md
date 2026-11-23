@@ -80,6 +80,20 @@ Do **not** also symlink the folder under `~/.config/opencode/plugins/`. Desktop 
 sources for the same plugin, and `opencode plugin list` will show duplicate entries. Keep one
 installation method.
 
+### Upgrade
+
+From the configured checkout, quit Desktop first:
+
+```bash
+git fetch --tags
+git checkout vX.Y.Z
+npm ci
+```
+
+Reopen Desktop. The plugin path in `opencode.json` stays the same, and the board data persists in
+plugin storage. See [`docs/upgrading.md`](docs/upgrading.md) for release, migration, notebook, and
+rollback details.
+
 For development, keep Vite rebuilding the bundle:
 
 ```bash
@@ -500,7 +514,8 @@ and `npm audit --audit-level=high`.
 
 - [`docs/design.md`](docs/design.md) — architecture, data model, lifecycle, failure handling, and the TUI mapping
 - [`docs/board-file.md`](docs/board-file.md) — `kanban-board.json` format, export/reload semantics, backup and recovery
-- [`CHANGELOG.md`](CHANGELOG.md)
+- [`docs/upgrading.md`](docs/upgrading.md) — release process, upgrades, data migration, and rollback
+- [`CHANGELOG.md`](CHANGELOG.md) — version history
 - [`docs/troubleshooting.md`](docs/troubleshooting.md) — symptom-driven fixes and data locations
 - [`docs/release-checklist.md`](docs/release-checklist.md) — the ordered v0.1.1 release runbook
 - [`docs/test-plan.md`](docs/test-plan.md) — automated cases and the manual Desktop plan

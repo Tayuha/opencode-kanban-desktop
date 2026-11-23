@@ -166,8 +166,8 @@ Run the listed cases from [`test-plan.md`](test-plan.md). Tick an area only when
 - [ ] README's reload wording says **replacement**, names the backup conditions, and links
       [`board-file.md`](board-file.md).
 - [ ] `docs/design.md`, `docs/test-plan.md`, `docs/release-checklist.md`,
-      `docs/acceptance-checklist.md`, `docs/board-file.md`, `docs/troubleshooting.md`, and
-      `SECURITY.md` are current.
+      `docs/acceptance-checklist.md`, `docs/board-file.md`, `docs/upgrading.md`,
+      `docs/troubleshooting.md`, and `SECURITY.md` are current.
 - [ ] `TODO.md` has no unchecked P0 without a waiver.
 - [ ] `LICENSE` keeps the TomCC7/opencode-kanban MIT attribution; README links the original.
 - [ ] Screenshots or a clear note that they are pending.
