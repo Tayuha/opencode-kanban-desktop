@@ -160,7 +160,9 @@ exported/reloaded snapshot: the file is parsed, checked, normalized, session bin
 and the board store is replaced. A success toast confirms the update.
 
 If the live board has unsaved changes, auto-reload skips the file and shows one conflict toast
-instead of overwriting your work. Missing or invalid files leave the board untouched. The manual
+instead of overwriting your work. Missing or invalid files leave the board untouched. A file that
+normalizes back to the same board, such as one with duplicate task IDs, shows a no-change toast
+instead of claiming an update. The manual
 **Reload board** remains available.
 
 ## Reload

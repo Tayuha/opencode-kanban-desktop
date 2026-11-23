@@ -454,6 +454,8 @@ export const definition = Plugin.define({
       "toast.boardExportFailed": "Could not export the board.",
       "toast.autoExportFailed": "Could not auto-export the board.",
       "toast.boardAutoReloaded": "Board updated from kanban-board.json.",
+      "toast.boardFileNoChange": "Board file read; no effective change.",
+      "toast.boardFileNoChange.body": "Duplicate task IDs or entries that normalize away were ignored.",
       "toast.boardExternalConflict": "kanban-board.json changed externally; reload it manually to keep your live edits.",
       "toast.boardBackupFailed": "Could not back up the live board; reload cancelled.",
       "toast.error": "Something went wrong.",

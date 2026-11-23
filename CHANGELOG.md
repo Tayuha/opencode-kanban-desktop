@@ -8,6 +8,8 @@ Do not tag yet. Add v0.1.2 changes here until the release is closed; the package
 - Added `AGENTS.md`, the guide for AI agents working on the plugin.
 - Added `docs/upgrading.md`, the release, upgrade, migration, and rollback plan.
 - README now links both documents.
+- Auto-reload now distinguishes an effective board update from a file that normalizes to the
+  same board (for example duplicate task IDs), instead of claiming the board updated.
 
 ## v0.1.1 — 2026-11-22
 

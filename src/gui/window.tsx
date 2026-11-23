@@ -592,11 +592,21 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
       if (!isBoardLike(parsed)) return
 
       const next = mergeSessionBindings(normalizeBoard(parsed), board())
+      const before = JSON.stringify(ctx.stores.board.value)
+      const after = JSON.stringify(next)
+      lastFile = fileJson
+      lastBoard = after
+      reloadConflict = false
+      if (after === before) {
+        ctx.toast.show({
+          variant: "default",
+          title: ctx.t("toast.boardFileNoChange"),
+          description: ctx.t("toast.boardFileNoChange.body"),
+        })
+        return
+      }
       ctx.stores.board.set(next)
       live.invalidate()
-      lastFile = fileJson
-      lastBoard = JSON.stringify(next)
-      reloadConflict = false
       ctx.toast.show({ variant: "default", title: ctx.t("toast.boardAutoReloaded") })
     } catch {
       // Missing, unreadable, or unavailable file: leave the live board alone.
