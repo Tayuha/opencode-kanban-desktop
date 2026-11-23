@@ -11,6 +11,8 @@ Do not tag yet. Add v0.1.2 changes here until the release is closed; the package
 - Auto-reload now uses a canonical board key and distinguishes an effective board update from a
   file that normalizes to the same board (for example duplicate task IDs), instead of claiming
   the board updated.
+- Detail labels no longer render literal `{{time}}` placeholders; the Changes empty copy no longer
+  says “worktree” for tasks without one.
 
 ## v0.1.1 — 2026-11-22
 

@@ -11,6 +11,9 @@ describe("definition", () => {
     for (const key of ["panel.title", "command.open", "settings.title", "settings.density", "density.compact", "action.compact", "help.key.c", "tags.description.project", "notify.done", "help.title"]) {
       expect(en[key], key).toBeTruthy()
     }
+    for (const key of ["task.created", "task.updated"]) {
+      expect(en[key], key).not.toContain("{{")
+    }
   })
 
   it("keeps the default copy free of missing placeholders", () => {
