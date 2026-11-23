@@ -156,7 +156,7 @@ The board file's exact behavior is in [`board-file.md`](board-file.md).
 
 - [ ] No known data-loss, session-kill, or network-egress bug remains
 - [ ] `docs/release-checklist.md` is signed
-- [ ] The release is scoped to a local/private v0.1.0, not an npm publish
+- [ ] The release is scoped to a local/private v0.1.x, not an npm publish
 
 ## Attribution
 

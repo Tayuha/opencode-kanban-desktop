@@ -10,8 +10,8 @@ which is a terminal UI built around tmux. The board structure, task model, workt
 keyboard-first feel are kept. tmux, terminal launching, and custom TUI themes are replaced by
 OpenCode Desktop's native project, worktree, session, tab, dialog, and notification APIs.
 
-**Release scope:** local/private v0.1.0 for OpenCode Desktop 2.3.2. The package is `private: true`
-and installs from this checkout; it is not published to npm. The documented v0.1.0 baseline passes
+**Release scope:** local/private v0.1.1 for OpenCode Desktop 2.3.2. The package is `private: true`
+and installs from this checkout; it is not published to npm. The documented v0.1.1 baseline passes
 `typecheck`, 122 unit tests, and a deterministic single-file GUI build.
 
 ## Requirements
@@ -500,8 +500,9 @@ and `npm audit --audit-level=high`.
 
 - [`docs/design.md`](docs/design.md) — architecture, data model, lifecycle, failure handling, and the TUI mapping
 - [`docs/board-file.md`](docs/board-file.md) — `kanban-board.json` format, export/reload semantics, backup and recovery
+- [`CHANGELOG.md`](CHANGELOG.md)
 - [`docs/troubleshooting.md`](docs/troubleshooting.md) — symptom-driven fixes and data locations
-- [`docs/release-checklist.md`](docs/release-checklist.md) — the ordered v0.1.0 release runbook
+- [`docs/release-checklist.md`](docs/release-checklist.md) — the ordered v0.1.1 release runbook
 - [`docs/test-plan.md`](docs/test-plan.md) — automated cases and the manual Desktop plan
 - [`docs/acceptance-checklist.md`](docs/acceptance-checklist.md) — the detailed acceptance matrix
 - [`TODO.md`](TODO.md) — the release backlog and P0/P1 work

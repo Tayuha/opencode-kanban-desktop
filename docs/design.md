@@ -472,7 +472,7 @@ leaves the session bound and open and reports a toast.
 
 ## Testing
 
-The documented v0.1.0 suite has 122 vitest cases:
+The documented v0.1.1 suite has 122 vitest cases:
 
 | File | Cases | Focus |
 |---|---:|---|

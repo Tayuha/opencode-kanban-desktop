@@ -1,15 +1,17 @@
-# TODO — v0.1.0 release backlog
+# TODO — v0.1.x release backlog
 
 Release-level backlog for `opencode-kanban-desktop`. The working board is the plugin's own Kanban
 board; this file is the durable release view. The gate to run is
 [`docs/release-checklist.md`](docs/release-checklist.md); the detailed cases are in
 [`docs/test-plan.md`](docs/test-plan.md) and [`docs/acceptance-checklist.md`](docs/acceptance-checklist.md).
 
-- **Target:** local/private v0.1.0 on OpenCode Desktop **2.3.2**
+- **Target:** local/private v0.1.x on OpenCode Desktop **2.3.2**
 - **Platform exercised:** Linux
 - **Last updated:** 2026-11-20
 
 ## Current state
+
+> **v0.1.1** is a patch release over v0.1.0: it fixes duplicate project entries for the same folder. No board data migration is required. See [`CHANGELOG.md`](CHANGELOG.md).
 
 Implemented and unit-tested:
 
@@ -53,7 +55,7 @@ Not yet verified:
 
 ## P0 — release blockers
 
-Tick every item before tagging v0.1.0. Each maps to a card on the board.
+Tick every item before tagging a release. Each maps to a card on the board.
 
 - [x] **Verify the board UI in Desktop** (card `todo/verify-gui`)
       Panel, full board, keybinds, command palette, columns, tags, card moves, and persistence
@@ -79,7 +81,7 @@ Tick every item before tagging v0.1.0. Each maps to a card on the board.
       Remove the checkout from the config, restart, reinstall from the global config, and confirm
       board state, tags, links, columns, and settings recover.
 - [x] **Commit and push the plugin** (card `chore/git-upload`)
-      Repository initialized; `main` and tag `v0.1.0` pushed to
+      Repository initialized; `main`, `v0.1.0`, and patch tag `v0.1.1` pushed to
       `github.com:Tayuha/opencode-kanban-desktop` (SSH). The remaining release gates still apply.
 - [ ] **Run and sign `docs/release-checklist.md`**
       No unchecked P0 without a written waiver.
@@ -113,6 +115,8 @@ Implemented and covered by the 122 automated tests:
 
 ## P1 — follow-ups
 
+- [ ] Plan the v0.1.1 upgrade for existing local-checkout installs (card `todo/update-plan`)
+
 - [ ] Pin closed or arbitrary sessions, beyond the open-session linker
 - [ ] Verify worktree-removal delete has no Undo in a real git project (deferred; main project is non-git)
 - [ ] Custom plugin icons when the SDK exposes them
@@ -120,7 +124,7 @@ Implemented and covered by the 122 automated tests:
 - [ ] macOS and Windows smoke test
 - [ ] Optional tag presets and tag reordering
 
-## Out of scope for v0.1.0
+## Out of scope for v0.1.x
 
 - npm publish (`package.json` is `private: true`; this is a local/private release)
 - tmux, external terminal launching, and custom TUI themes
@@ -130,7 +134,7 @@ Implemented and covered by the 122 automated tests:
 
 ## Definition of done
 
-v0.1.0 is releasable when:
+v0.1.x is releasable when:
 
 1. Every P0 item is checked, or waived in writing in the release checklist.
 2. `docs/release-checklist.md` is signed.
