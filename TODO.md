@@ -13,6 +13,8 @@ board; this file is the durable release view. The gate to run is
 ## Current state
 
 > **v0.1.1** is a patch release over v0.1.0: it fixes duplicate project entries for the same folder. No board data migration is required. See [`CHANGELOG.md`](CHANGELOG.md).
+>
+> **v0.1.2 is open** but not tagged. Add changes under `Unreleased` in `CHANGELOG.md`; bump the package version and create the tag only when the release is closed.
 
 Implemented and unit-tested:
 

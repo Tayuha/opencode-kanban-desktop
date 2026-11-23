@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased (v0.1.2)
+
+Do not tag yet. Add v0.1.2 changes here until the release is closed; the package version stays
+`0.1.1` until then.
+
+- Added `AGENTS.md`, the guide for AI agents working on the plugin.
+- Added `docs/upgrading.md`, the release, upgrade, migration, and rollback plan.
+- README now links both documents.
+
 ## v0.1.1 — 2026-11-22
 
 Patch release for existing v0.1.0 installs. No board data migration is required.
