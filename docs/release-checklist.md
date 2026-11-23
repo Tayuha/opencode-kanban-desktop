@@ -139,6 +139,8 @@ Run the listed cases from [`test-plan.md`](test-plan.md). Tick an area only when
       receive a file.
 - [ ] K-49 — the board-folder action writes to the chosen folder and can be reset to the project
       root.
+- [ ] K-52 — selecting a project with a board and no file creates its snapshot; an existing file
+      is not overwritten just by selection.
 - [ ] K-50/K-51 — the v0.1.1 split preserves cards, and a legacy whole-installation file imports
       only the selected project.
 - [ ] K-47 — an empty-board reload has no confirmation and writes no new backup.

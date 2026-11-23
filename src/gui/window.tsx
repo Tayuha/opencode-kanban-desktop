@@ -620,6 +620,46 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
     scheduleExport(key)
   })
 
+  const provisioned = new Set<string>()
+  const provisioning = new Set<string>()
+
+  const provisionBoardFile = (key: string, directory: string, force = false) => {
+    if ((!force && provisioned.has(key)) || provisioning.has(key)) return
+    provisioning.add(key)
+    void (async () => {
+      let settled = false
+      try {
+        const response = (await ctx.client.rpc(KanbanBoard).load({ directory })) as { json: string }
+        if (!fileBaselines.has(key)) fileBaselines.set(key, response.json)
+        settled = true
+      } catch (error) {
+        const type = rpcErrorType(error)
+        if (type === "not_found") {
+          exportDirs.set(key, directory)
+          written.delete(key)
+          scheduleExport(key)
+          settled = true
+        } else if (type !== "rpc.method_not_found" && type !== "rpc.unavailable") {
+          settled = true
+        }
+      } finally {
+        provisioning.delete(key)
+        if (settled) provisioned.add(key)
+      }
+    })()
+  }
+
+  // A project with a board gets its own snapshot on first selection instead of waiting for an edit.
+  createEffect(() => {
+    if (ctx.stores.prefs.value.autoExport === false) return
+    const session = ctx.sessions.current()
+    const project = autoTarget()
+    if (!session || !project) return
+    const key = boardKeyFor(boards(), project.root, project.id)
+    if (!key || !boards()[key]) return
+    provisionBoardFile(key, boardDirectory(ctx.stores.prefs.value, key, project.root))
+  })
+
   const pollExternal = async () => {
     if (ctx.stores.prefs.value.autoReload === false) return
     if (reloadPolling) return
@@ -1331,6 +1371,7 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
         else delete boardDirs[key]
         ctx.stores.prefs.set({ ...prefs(), boardDirs })
         exportDirs.set(key, directory ?? project.root)
+        provisionBoardFile(key, directory ?? project.root, true)
         notify(
           "success",
           directory ? ctx.t("boardFolder.saved") : ctx.t("boardFolder.reset"),

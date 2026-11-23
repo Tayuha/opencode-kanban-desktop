@@ -164,7 +164,9 @@ leaves the board alone.
 ## Export
 
 Auto-export runs after one project's board changes settle for 1.5 seconds. Manual **Export board**
-(panel upload icon or palette command) runs the same write immediately. Both:
+(panel upload icon or palette command) runs the same write immediately. With auto-export on,
+selecting a project that has a board but no file also creates its snapshot; an existing file is
+never overwritten just by selecting the project. Both writes:
 
 1. Serialize that project's live board with two-space indentation and a trailing newline.
 2. Call `nmdra.kanban-desktop.board.save({ directory: boardFolder, json })`.

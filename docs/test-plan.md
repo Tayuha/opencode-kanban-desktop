@@ -259,6 +259,7 @@ cases.
 | K-47 | With an empty board, press reload with a valid file | No confirmation and no new `kanban-board.backup.json`; the file loads |
 | K-48 | Delete a task's pinned session outside the board, then refresh | The pin is cleared after the server confirms it is missing; a toast explains; the card shows no session and **Unlink** disappears; Link/New session can attach another |
 | K-49 | Click the folder icon, choose a different board folder, change the board, then export | The file is written in the chosen folder; the project root is untouched; the choice survives a restart; choosing **Project root** reverses it |
+| K-52 | Select a project that has a board but no `kanban-board.json` with auto-export on | The file is created after the debounce with only that project's board; selecting a project whose file exists does not overwrite it |
 | K-50 | Upgrade a v0.1.1 installation whose board has tasks from two projects | Each project shows only its own cards, columns, and tags; the old global file still loads only the current project on reload |
 | K-51 | Put a legacy whole-installation `kanban-board.json` in project A and reload | Only A's tasks are imported; the other project's cards stay out of A's board; the toast reports A's imported task count |
 | T-01 | **Tags** → add three tags with different colors in project A | The filter row and task dialog show them for A; project B keeps its own tags; cards show assigned tags |

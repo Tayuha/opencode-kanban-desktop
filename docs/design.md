@@ -344,12 +344,13 @@ prompt cache, todos, and cost.
 ### Export and reload
 
 **Auto-export** runs per project board. After one project's board changes settle for 1.5 seconds,
-the plugin serializes that board and calls `save({ directory: boardFolder, json })` silently. Each
-project keeps its own debounce, destination, and last-written snapshot, so switching projects does
-not export the wrong board. It never runs while the preference is off. A failure shows one toast
-per distinct error until a later write succeeds. Manual **Export board** uses the same save path
-immediately and reports the file and backup paths. Both keep the previous file as
-`kanban-board.json.bak`.
+the plugin serializes that board and calls `save({ directory: boardFolder, json })` silently. When
+a project with a board is selected and no file exists, the same path creates it; an existing file
+is only read as a baseline. Each project keeps its own debounce, destination, and last-written
+snapshot, so switching projects does not export the wrong board. It never runs while the preference
+is off. A failure shows one toast per distinct error until a later write succeeds. Manual **Export
+board** uses the same save path immediately and reports the file and backup paths. Both keep the
+previous file as `kanban-board.json.bak`.
 
 **Auto-reload** polls the selected project's board file every two seconds while a session is
 active. The first successful read for a project establishes a baseline without replacing the

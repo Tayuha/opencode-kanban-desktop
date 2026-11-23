@@ -13,7 +13,8 @@ Do not tag yet. Add v0.1.2 changes here until the release is closed; the package
   of showing or exporting another project's cards.
 - **Project-scoped board files.** Export, auto-export, reload, and auto-reload read and write only
   the selected project's `kanban-board.json`. The file defaults to the project root, and the panel
-  folder action stores an optional per-project board folder.
+  folder action stores an optional per-project board folder. Selecting a project with a board but
+  no file creates its snapshot; an existing file is not overwritten just by selecting it.
 - **One-time migration.** The v0.1.1 global `board` row is split by each task's `projectRoot` into
   per-project boards, then reset. A legacy whole-installation snapshot is narrowed to the selected
   project on reload; tasks for other folders are ignored.

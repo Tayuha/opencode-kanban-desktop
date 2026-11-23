@@ -282,6 +282,9 @@ chooses the folder, which defaults to its root.
   `kanban-board.json` atomically. It is silent; failures show a toast. The previous file is copied
   to `kanban-board.json.bak` on each write, so `.bak` is the immediately previous snapshot. Disable
   it in **Settings → Extensions → Kanban → Auto-export this project's board**.
+- **A missing project file is created when the project is selected.** With auto-export on, a
+  project that has a board but no `kanban-board.json` gets one after the debounce. An existing file
+  is left alone; use **Reload board** to import it.
 - **Export board** writes immediately and reports the path and backup path. It uses the project's
   board folder.
 - **Auto-reload is on by default.** While a session is active, the plugin checks the selected

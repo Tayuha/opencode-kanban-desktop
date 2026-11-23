@@ -122,6 +122,7 @@ The board file's exact behavior is in [`board-file.md`](board-file.md).
 - [ ] The project switcher follows the routed session's project on open
 - [ ] Export writes only the selected project's board (tasks, tags, columns, archived cards) to its board folder
 - [ ] A project's board folder defaults to its root and can be changed with the folder action; the choice survives a restart
+- [ ] Selecting a project with a board but no board file creates its snapshot; selecting one with an existing file does not overwrite it
 - [ ] Export keeps an existing previous file as `kanban-board.json.bak`
 - [ ] Exporting into a git project may create an untracked/modified board file; the doc warns about it
 - [ ] Reload reads an **exported/current** project `kanban-board.json`, confirms when that project's board has any task, and replaces that project's board with the file
