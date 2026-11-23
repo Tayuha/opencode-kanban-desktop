@@ -431,8 +431,9 @@ leaves the session bound and open and reports a toast.
   In progress / Done**. Tasks remain in their board, and a column from one project is never a valid
   target for another project's task.
 - **Board files are per project.** The default is `<projectRoot>/kanban-board.json`; the panel's
-  folder action stores an optional override per project. A reload scopes the file to the project,
-  so a legacy whole-installation snapshot cannot add another project's cards.
+  folder action stores an optional override per project. Changing or resetting the folder exports
+  the current board to the new folder and leaves the old file in place. A reload scopes the file to
+  the project, so a legacy whole-installation snapshot cannot add another project's cards.
 - **Compact density is a reading mode.** It keeps the same board DOM and interactions but hides tags,
   branch/worktree lines, and card details, clamps cards to one line, and caps scroll-mode columns at
   220px. The toggle lives in the panel header, the `C` key, the palette, and settings.

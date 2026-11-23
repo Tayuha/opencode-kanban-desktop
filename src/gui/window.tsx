@@ -383,8 +383,8 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
     }
   }
 
-  const exportKey = async (key: string) => {
-    if (ctx.stores.prefs.value.autoExport === false) return
+  const exportKey = async (key: string, force = false) => {
+    if (!force && ctx.stores.prefs.value.autoExport === false) return
     const directory = exportDirs.get(key)
     if (!directory) return
     const snapshotBoard = boards()[key]
@@ -623,8 +623,8 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
   const provisioned = new Set<string>()
   const provisioning = new Set<string>()
 
-  const provisionBoardFile = (key: string, directory: string, force = false) => {
-    if ((!force && provisioned.has(key)) || provisioning.has(key)) return
+  const provisionBoardFile = (key: string, directory: string) => {
+    if (provisioned.has(key) || provisioning.has(key)) return
     provisioning.add(key)
     void (async () => {
       let settled = false
@@ -1369,13 +1369,18 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
         const boardDirs = { ...(prefs().boardDirs ?? {}) }
         if (directory) boardDirs[key] = directory
         else delete boardDirs[key]
+        const previous = boardDirectory(prefs(), key, project.root)
+        const target = directory ?? project.root
         ctx.stores.prefs.set({ ...prefs(), boardDirs })
-        exportDirs.set(key, directory ?? project.root)
-        provisionBoardFile(key, directory ?? project.root, true)
+        exportDirs.set(key, target)
+        written.delete(key)
+        await exportKey(key, true)
         notify(
           "success",
           directory ? ctx.t("boardFolder.saved") : ctx.t("boardFolder.reset"),
-          directory ?? project.root,
+          previous !== target
+            ? `${target}\n${ctx.t("boardFolder.previous")}: ${previous}`
+            : target,
         )
       } catch (error) {
         notify("error", ctx.t("boardFolder.failed"), errorText(error))

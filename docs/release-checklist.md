@@ -138,7 +138,9 @@ Run the listed cases from [`test-plan.md`](test-plan.md). Tick an area only when
 - [ ] K-46 — export from project A contains only A's cards; project B does not automatically
       receive a file.
 - [ ] K-49 — the board-folder action writes to the chosen folder and can be reset to the project
-      root.
+      root; the old folder's file is left in place.
+- [ ] K-49b — resetting to the project root refreshes the root file and the toast names the old
+      folder.
 - [ ] K-52 — selecting a project with a board and no file creates its snapshot; an existing file
       is not overwritten just by selection.
 - [ ] K-50/K-51 — the v0.1.1 split preserves cards, and a legacy whole-installation file imports

@@ -15,7 +15,9 @@ keeps the selected project's file current after its board changes unless the pre
 
 - Default: `<projectRoot>/kanban-board.json`.
 - The folder icon in the panel header opens **Board file folder**. Choose **Project root** or a
-  folder with `ctx.desktop.pick`. The choice is stored per project in the preferences.
+  folder with `ctx.desktop.pick`. The choice is stored per project in the preferences. Changing or
+  resetting the folder immediately writes the current board there (an existing file is kept as
+  `.bak`). The previous folder's file is not moved or deleted.
 - A project's board is keyed by its canonical folder. Two OpenCode project records for the same
   folder share one board and one default file.
 - Do not point several projects at the same folder. They would take turns overwriting one file.
