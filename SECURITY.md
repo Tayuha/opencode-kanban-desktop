@@ -135,7 +135,8 @@ persist or transmit the rest.
 ## Controls in place
 
 - Destructive actions use the app's confirm dialogs.
-- Deleting a task asks once; worktree removal is a second choice. A failed non-forced removal
+- Deleting a task asks once; a worktree task asks whether to keep or remove the worktree in that
+  same choice. A failed non-forced removal
   requires a second, explicit force confirmation that shows the server error.
 - Deleting a task does not stop its session. Removing a worktree does not delete its branch.
 - `Reset board data` has its own confirmation and never removes worktrees or sessions.

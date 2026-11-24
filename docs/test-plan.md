@@ -208,9 +208,9 @@ cases.
 | K-14 | Type in search; press Escape; press `/` | Filter narrows to title/branch/project/notes matches; Escape clears; `/` focuses the field |
 | K-15 | Archive a card, click **Undo** in the toast | The task returns to its original column and position within 8 seconds |
 | K-15b | Archive a card, open **Archive**, restore it | Task leaves the board, appears in Archive, returns to its original column and position |
-| K-16 | Delete a task with a worktree; decline worktree removal, then click **Undo** | Card is deleted; worktree remains on disk; Undo restores the card at its old position and the session keeps running |
-| K-17 | Delete a task with a clean worktree; accept removal | Worktree is removed; no branch was created to clean up; the card is gone and no Undo action is offered |
-| K-18 | Delete a task with a dirty worktree; accept removal, then force | First removal fails; a force confirmation names the error; force removes it; declining keeps both task and worktree |
+| K-16 | Delete a task with a worktree; choose **Delete task, keep worktree**, then click **Undo** | Card is deleted; worktree remains on disk; Undo restores the card at its old position and the session keeps running |
+| K-17 | Delete a task with a clean worktree; choose **Delete task and remove worktree** | Worktree is removed; no branch was created to clean up; the card is gone and no Undo action is offered |
+| K-18 | Delete a task with a dirty worktree; choose **Delete task and remove worktree**, then force | First removal fails; a force confirmation names the error; force removes it; declining keeps both task and worktree |
 | K-19 | Edit a task's title, column, notes, and tags | Changes persist across a reopen |
 | K-20 | Double-click a card with no session, with **Opening a task = Reuse** | A session is created in its directory, bound to the card, and opened |
 | K-20b | Double-click the same card again | The same session tab focuses; no second session is created |

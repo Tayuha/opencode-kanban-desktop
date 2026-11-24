@@ -154,10 +154,11 @@ dialog and shares the same per-project board data and live state.
   current view, including the archive. Escape clears it.
 - **Archive** keeps finished cards out of the board but available to restore. Restoring puts the
   task back in its original column and position. The archive toast offers **Undo** for 8 seconds.
-- **Delete** asks once for the task. If the task has a worktree, a second dialog asks whether to
-  remove it; declining removes only the card. Keeping the worktree shows “worktree kept” and offers
+- **Delete** offers two choices for a task with a worktree: **Delete task, keep worktree** or
+  **Delete task and remove worktree**. Keeping the worktree shows “worktree kept” and offers
   **Undo**; removing it shows “worktree removed” and is permanent. A task with no worktree —
-  including every non-git project — always offers Undo. Session processes are never stopped.
+  including every non-git project — uses a simple delete confirmation and always offers Undo.
+  Session processes are never stopped.
 
 The panel's chip shows the number of active tasks in the selected project, or the number currently
 running. The archive view lists archived tasks; it does not have a separate count badge.

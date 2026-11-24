@@ -414,8 +414,8 @@ leaves the session bound and open and reports a toast.
   and filtering tags that have since been deleted. If the worktree was removed, no undo is offered.
 - A task with an existing `directory` is never treated as a managed worktree. The delete flow does
   not offer worktree removal and never deletes that folder; it behaves like a plain card delete.
-- Delete from the board asks once for the task. If it has a worktree, a second dialog asks whether
-  to remove the worktree too. Declining removes only the card and leaves the worktree.
+- Delete from the board opens one choice dialog when the task has a worktree: keep it or remove
+  it with the card. Keeping removes only the card and leaves the worktree.
 - Worktree removal first tries `force: false`. If that fails, a second confirmation offers a
   forced removal and shows the server error. Declining the force confirmation aborts the delete,
   leaving both the worktree and the task.

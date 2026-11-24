@@ -133,22 +133,37 @@ export function BoardView(props: BoardViewProps) {
   }
 
   const removeTask = async (task: Task) => {
-    const ok = await ctx.dialogs.confirm({
-      title: ctx.t("task.delete.title"),
-      description: ctx.t("task.delete.description", { title: task.title }),
-      confirm: ctx.t("action.delete"),
-      danger: true,
-    })
-    if (!ok) return
-
     let removeWorktree = false
     if (hasManagedWorktree(task)) {
-      removeWorktree = await ctx.dialogs.confirm({
-        title: ctx.t("task.delete.worktree"),
-        description: ctx.t("task.delete.worktree.description"),
+      const choice = await ctx.dialogs.select<"keep" | "remove">({
+        title: ctx.t("task.delete.title"),
+        placeholder: ctx.t("task.delete.description", { title: task.title }),
+        current: "keep",
+        options: [
+          {
+            value: "keep",
+            title: ctx.t("task.delete.keep"),
+            description: ctx.t("task.delete.keep.description"),
+            group: ctx.t("task.delete.group"),
+          },
+          {
+            value: "remove",
+            title: ctx.t("task.delete.remove"),
+            description: ctx.t("task.delete.remove.description"),
+            group: ctx.t("task.delete.group"),
+          },
+        ],
+      })
+      if (!choice) return
+      removeWorktree = choice === "remove"
+    } else {
+      const ok = await ctx.dialogs.confirm({
+        title: ctx.t("task.delete.title"),
+        description: ctx.t("task.delete.description", { title: task.title }),
         confirm: ctx.t("action.delete"),
         danger: true,
       })
+      if (!ok) return
     }
 
     try {
