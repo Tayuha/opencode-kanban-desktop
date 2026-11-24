@@ -867,6 +867,16 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
       const task = next.tasks.find((item) => item.id === id)!
       live.invalidate(session.server.id, project.id)
 
+      notify(
+        "success",
+        directory
+          ? ctx.t("toast.createdDirectory")
+          : worktreePath
+            ? ctx.t("toast.createdWorktree")
+            : ctx.t("toast.created"),
+        directory ?? worktreePath ?? project.root,
+      )
+
       if (input.autoPrompt) {
         try {
           await services.startAgent(session, task, input.prompt)
@@ -903,14 +913,6 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
             notify("error", ctx.t("toast.error"), errorText(error))
           }
         }
-        notify(
-          "success",
-          directory
-            ? ctx.t("toast.createdDirectory")
-            : worktreePath
-              ? ctx.t("toast.createdWorktree")
-              : ctx.t("toast.created"),
-        )
       }
       return task
     },

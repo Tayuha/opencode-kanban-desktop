@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest"
-import { baseName, findProject, mergeProject, projectForSession, projectName, projectRoot, projectRows } from "./projects.ts"
+import {
+  baseName,
+  findProject,
+  insideFolder,
+  mergeProject,
+  nestedProjectFor,
+  projectForSession,
+  projectName,
+  projectRoot,
+  projectRows,
+} from "./projects.ts"
 
 describe("projectRows", () => {
   it("names, sorts, and deduplicates projects", () => {
@@ -90,5 +100,29 @@ describe("lookups", () => {
     expect(projectName(rows, "a")).toBe("A")
     expect(projectName(rows, "missing", "fallback")).toBe("fallback")
     expect(projectRoot(rows, "a")).toBe("/a")
+  })
+})
+
+describe("folder containment", () => {
+  it("accepts the root and subfolders, and rejects siblings or escapes", () => {
+    expect(insideFolder("/work/repo", "/work/repo")).toBe(true)
+    expect(insideFolder("/work/repo/", "/work/repo/src/gui")).toBe(true)
+    expect(insideFolder("/work/repo", "/work/repository")).toBe(false)
+    expect(insideFolder("/work/repo", "/other/repo")).toBe(false)
+    expect(insideFolder("/work/repo", "/work/repo/../other")).toBe(false)
+    expect(insideFolder("C:\\Work\\Repo", "c:/work/repo/src")).toBe(true)
+  })
+
+  it("does not treat a parent or sibling project as nested", () => {
+    const rows = [
+      { id: "parent", name: "Parent", root: "/work/repo" },
+      { id: "nested", name: "Nested", root: "/work/repo/tool" },
+      { id: "other", name: "Other", root: "/work/other" },
+    ]
+    expect(nestedProjectFor(rows, "parent", "/work/repo/tool/src")?.id).toBe("nested")
+    expect(nestedProjectFor(rows, "nested", "/work/repo/tool/src")).toBeUndefined()
+    expect(nestedProjectFor(rows, "nested", "/work/repo/src")).toBeUndefined()
+    expect(nestedProjectFor(rows, "parent", "/work/repo/src")).toBeUndefined()
+    expect(nestedProjectFor(rows, "parent", "/work/other/src")).toBeUndefined()
   })
 })

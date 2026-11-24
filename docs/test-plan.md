@@ -3,7 +3,7 @@
 Two layers: automated unit tests for everything that does not need a GUI, and a manual Desktop
 plan for the contributions and API calls that only the app can exercise.
 
-The documented v0.1.1 suite has **139 cases**. It covers the pure model, the live registry with a
+The documented v0.1.1 suite has **141 cases**. It covers the pure model, the live registry with a
 fake client, the board-file server code, the store definition, and formatting. It cannot cover
 Desktop's event timing, tabs, dialogs, notifications, clipboard, or worktree API.
 
@@ -104,7 +104,7 @@ byte-identical and the bundle should require only the five shared modules.
 - non-assistant messages and empty lists
 - progress percentage
 
-### `model/projects.test.ts` — 10 cases
+### `model/projects.test.ts` — 12 cases
 
 - names from the last path segment, Windows paths, trailing slashes
 - sort and dedupe project rows
@@ -198,6 +198,7 @@ cases.
 | K-06 | Create a task in a git project with worktree on and a prompt (**Open a session** on, the default) | A detached worktree is created at the base ref; no git branch is created; a linked session opens in that directory with the prompt prefilled; the card shows the worktree name and the session is bound before sending |
 | K-06b | Inspect the worktree with git | `git worktree list` shows it detached at the base commit; create a branch inside it manually; the plugin neither creates nor deletes that branch |
 | K-07 | Leave the branch name empty and enter a title; press **Generate** | A worktree label is generated as `feature/<word>-<word>-NNN`; **Generate** replaces it with another valid name |
+| K-07b | Choose **Default branch** in the base select | The select keeps showing “Default branch” instead of a blank value; the worktree detaches at HEAD |
 | K-08 | Try a branch name with a space, a duplicate label, and an empty title+label | The dialog shows the matching validation message and stays open; no card/worktree is created |
 | K-09 | Drag a card to another column and between two cards | Card moves, order is correct, counts update |
 | K-10 | Select a card, press Shift+Right and Shift+Up | Task changes column, then reorders within the column |
@@ -213,6 +214,7 @@ cases.
 | K-16 | Delete a task with a worktree; decline worktree removal, then click **Undo** | Card is deleted; worktree remains on disk; Undo restores the card at its old position and the session keeps running |
 | K-16b | Delete an existing-folder task | No worktree-removal dialog; the folder still exists; the toast offers Undo like a plain card delete |
 | K-16c | Type a relative path, a missing absolute path, or a folder outside the project in **Existing folder**, then create | Each is rejected with matching copy; choose a folder inside the project |
+| K-16d | Choose a folder that is itself a different OpenCode project inside the current project | Rejected with “That folder belongs to another OpenCode project”; the current board is not replaced |
 | K-17 | Delete a task with a clean worktree; accept removal | Worktree is removed; no branch was created to clean up; the card is gone and no Undo action is offered |
 | K-18 | Delete a task with a dirty worktree; accept removal, then force | First removal fails; a force confirmation names the error; force removes it; declining keeps both task and worktree |
 | K-19 | Edit a task's title, column, notes, and tags | Changes persist across a reopen |
@@ -242,6 +244,7 @@ cases.
 | K-33 | Change alignment, width, density, poll interval, default column, auto-export, auto-reload | Board and refresh behavior follow; changes apply without a restart and survive one |
 | K-33b | Toggle compact columns from the header, `C`, the palette, and settings | Cards become one-line rows with a status dot; tags and branch/worktree details hide; the setting survives a restart |
 | K-33c | Open **Help** at the narrowest panel width | `CTRL ALT SHIFT K` and other key chips stay in the key column; descriptions do not overlap |
+| K-33d | Open the new-task dialog at normal and narrow widths | Long switch descriptions wrap under their labels instead of clipping at the right edge; the dialog remains scrollable |
 | K-34 | **Reset board data** | Confirm; tasks, tags, tag assignments, and every project's column set are gone; the three default columns return in each board; worktrees, sessions, and preferences remain |
 | K-35 | Restart Desktop with several tasks | Board, tags, session links, columns, positions, archived cards, and settings persist |
 | K-36 | Switch projects in the panel header | The other project's entire board, columns, tags, and archive load; the previous project's board is unchanged; creating a task targets that project |

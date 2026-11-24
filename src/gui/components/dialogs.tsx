@@ -18,8 +18,8 @@ import {
   updateTag,
   validateBranch,
 } from "../model/board.ts"
-import { Field } from "../components.tsx"
-import { findProject } from "../model/projects.ts"
+import { Field, SwitchRow } from "../components.tsx"
+import { findProject, insideFolder, nestedProjectFor } from "../model/projects.ts"
 import type { BranchList } from "../data/actions.ts"
 
 type TaskDialogProps = {
@@ -32,33 +32,10 @@ type TaskDialogProps = {
   onClose(): void
 }
 
+const DEFAULT_BASE = "__opencode_kanban_default__"
+
 function errorText(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
-}
-
-function normalizedDirectory(value: string): string {
-  const slashed = value.replace(/\\/g, "/").replace(/\/+/g, "/")
-  const prefix = slashed.startsWith("/") ? "/" : ""
-  const parts: string[] = []
-  for (const part of slashed.split("/")) {
-    if (!part || part === ".") continue
-    if (part === "..") {
-      parts.pop()
-      continue
-    }
-    parts.push(part)
-  }
-  const joined = `${prefix}${parts.join("/")}`.replace(/\/+$/, "")
-  return joined || "/"
-}
-
-function insideProject(root: string, folder: string): boolean {
-  const base = normalizedDirectory(root)
-  const target = normalizedDirectory(folder)
-  const windows = /^[a-zA-Z]:/.test(base)
-  const left = windows ? base.toLowerCase() : base
-  const right = windows ? target.toLowerCase() : target
-  return right === left || right.startsWith(left === "/" ? "/" : `${left}/`)
 }
 
 export function TaskDialog(props: TaskDialogProps) {
@@ -103,6 +80,9 @@ export function TaskDialog(props: TaskDialogProps) {
 
   const project = () => findProject(props.projects, projectID())
   const currentBranch = () => branch().trim() || suggested
+
+  /** A nested OpenCode project inside this one would open a different board for the session. */
+  const nestedProject = (folder: string) => nestedProjectFor(props.projects, projectID(), folder)
 
   createEffect(
     on(
@@ -154,7 +134,7 @@ export function TaskDialog(props: TaskDialogProps) {
     props.projects.map((row) => ({ value: row.id, label: row.name }))
 
   const baseOptions = () => [
-    { value: "", label: ctx.t("task.field.base.auto") },
+    { value: DEFAULT_BASE, label: ctx.t("task.field.base.auto") },
     ...branches().branches.map((value) => ({ value, label: value })),
   ]
 
@@ -167,8 +147,12 @@ export function TaskDialog(props: TaskDialogProps) {
       })) ?? []
       if (!picked) return
       const row = project()
-      if (row && !insideProject(row.root, picked)) {
+      if (row && !insideFolder(row.root, picked)) {
         setError(ctx.t("task.validation.directoryOutside"))
+        return
+      }
+      if (nestedProject(picked)) {
+        setError(ctx.t("task.validation.directoryProject"))
         return
       }
       setDirectory(picked)
@@ -193,8 +177,11 @@ export function TaskDialog(props: TaskDialogProps) {
     if (folder && !folder.startsWith("/") && !folder.startsWith("\\\\") && !/^[a-zA-Z]:[\\/]/.test(folder)) {
       return ctx.t("task.validation.directory")
     }
-    if (folder && !insideProject(row.root, folder)) {
+    if (folder && !insideFolder(row.root, folder)) {
       return ctx.t("task.validation.directoryOutside")
+    }
+    if (folder && nestedProject(folder)) {
+      return ctx.t("task.validation.directoryProject")
     }
     const value = currentBranch()
     const branchError = validateBranch(value)
@@ -309,15 +296,17 @@ export function TaskDialog(props: TaskDialogProps) {
               label={ctx.t("task.field.directory")}
               hint={
                 directory().trim()
-                  ? ctx.t("task.field.directory.selected")
-                  : ctx.t("task.field.directory.hint")
+                  ? `${ctx.t("task.field.directory.selected")} ${ctx.t("task.field.directory.board")}`
+                  : `${ctx.t("task.field.directory.hint")} ${ctx.t("task.field.directory.project", {
+                      path: project()?.root ?? "",
+                    })}`
               }
             >
               <div class="kb-field-row">
                 <ui.TextInput
                   label={ctx.t("task.field.directory")}
                   value={directory()}
-                  placeholder={ctx.t("task.field.directory.placeholder")}
+                  placeholder={project()?.root ?? ctx.t("task.field.directory.placeholder")}
                   onInput={(value) => {
                     setDirectory(value)
                     if (value.trim()) setMakeWorktree(false)
@@ -359,8 +348,8 @@ export function TaskDialog(props: TaskDialogProps) {
                 <ui.Select
                   label={ctx.t("task.field.base")}
                   options={baseOptions()}
-                  value={base()}
-                  onChange={setBase}
+                  value={base().trim() || DEFAULT_BASE}
+                  onChange={(value) => setBase(value === DEFAULT_BASE ? "" : value)}
                   disabled={busy()}
                 />
               </Field>
@@ -431,10 +420,13 @@ export function TaskDialog(props: TaskDialogProps) {
           </Field>
 
           <Show when={!editing()}>
-            <div class="kb-check-row">
+            <SwitchRow
+              label={ctx.t("task.worktree")}
+              description={ctx.t("task.worktree.description")}
+            >
               <ui.Switch
                 label={ctx.t("task.worktree")}
-                description={ctx.t("task.worktree.description")}
+                hideLabel
                 checked={makeWorktree() && !directory().trim()}
                 onChange={(checked) => {
                   setMakeWorktree(checked)
@@ -442,7 +434,7 @@ export function TaskDialog(props: TaskDialogProps) {
                 }}
                 disabled={busy() || checking() || !branches().isRepo || !!directory().trim()}
               />
-            </div>
+            </SwitchRow>
             <Show when={directory().trim()}>
               <span class="kb-field-hint">{ctx.t("task.field.directory.uses")}</span>
             </Show>
@@ -453,25 +445,31 @@ export function TaskDialog(props: TaskDialogProps) {
               <span class="kb-field-hint">{ctx.t("task.worktree.unavailable")}</span>
             </Show>
 
-            <div class="kb-check-row">
+            <SwitchRow
+              label={ctx.t("task.openOnCreate")}
+              description={ctx.t("task.openOnCreate.description")}
+            >
               <ui.Switch
                 label={ctx.t("task.openOnCreate")}
-                description={ctx.t("task.openOnCreate.description")}
+                hideLabel
                 checked={openOnCreate()}
                 onChange={setOpenOnCreate}
                 disabled={busy() || autoPrompt()}
               />
-            </div>
+            </SwitchRow>
 
-            <div class="kb-check-row">
+            <SwitchRow
+              label={ctx.t("task.autoPrompt")}
+              description={ctx.t("task.autoPrompt.description")}
+            >
               <ui.Switch
                 label={ctx.t("task.autoPrompt")}
-                description={ctx.t("task.autoPrompt.description")}
+                hideLabel
                 checked={autoPrompt()}
                 onChange={setAutoPrompt}
                 disabled={busy()}
               />
-            </div>
+            </SwitchRow>
 
             <Show when={autoPrompt() || openOnCreate()}>
               <Field label={ctx.t("task.field.prompt")}>

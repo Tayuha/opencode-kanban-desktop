@@ -79,7 +79,7 @@ npm run build
 npm audit --audit-level=high
 ```
 
-- Current suite: **139 tests**.
+- Current suite: **141 tests**.
 - Build twice and compare byte-for-byte when touching the bundle:
   `cp dist/gui-experimental.cjs /tmp/a.cjs && npm run build && cmp /tmp/a.cjs dist/gui-experimental.cjs`
 - The bundle must require only `effect`, `@opencode/plugin/gui`, `@opencode/plugin/rpc`,

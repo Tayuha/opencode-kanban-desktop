@@ -246,8 +246,9 @@ own watch and local filters, but shares the per-project board map and preference
    changes, calls `vcs.get`, `vcs.base`, and `vcs.branch.list` through `listBranches`.
 2. If the directory is not a git repository, the worktree switch is disabled and
    `makeWorktree` is false.
-3. Validation checks the project, column, title-or-branch, git branch syntax, and duplicate
-   branch labels in the same project. Auto-prompt also requires a prompt.
+3. Validation checks the project, column, title-or-branch, git branch syntax, duplicate
+   branch labels in the same project, and that an existing folder is inside the project and not
+   inside a different OpenCode project. Auto-prompt also requires a prompt.
 4. With worktrees on:
    `client.worktree.create({ projectID, name: branchLabel, branch: baseRef })`. OpenCode 2.3.2
    runs `git worktree add --detach`; `branch` is the ref to detach at, `name` labels the directory,
@@ -497,14 +498,14 @@ leaves the session bound and open and reports a toast.
 
 ## Testing
 
-The documented v0.1.1 suite has 139 vitest cases:
+The documented v0.1.1 suite has 141 vitest cases:
 
 | File | Cases | Focus |
 |---|---:|---|
 | `model/board.test.ts` | 60 | defaults, create/update/move/archive/delete/undo, task directories, per-project columns and tags, server ids and claiming, normalization, duplicate branches/counts, colors, session merge, shape check, branch generation |
 | `model/status.test.ts` | 12 | path normalization, session rows, pinned vs discovery matching, existing-folder matching, descendants, live derivation, status/transition helpers |
 | `model/todo.test.ts` | 8 | todo normalization, newest tool call, metadata/text fallbacks, percentage |
-| `model/projects.test.ts` | 10 | names, sort/dedupe, same-folder ids, routed fallback, lookups |
+| `model/projects.test.ts` | 12 | names, sort/dedupe, same-folder ids, routed fallback, lookups, folder containment, nested projects |
 | `model/boards.test.ts` | 11 | project keys, lookup/write immutability, migration split, project scoping, board folders |
 | `model/select.test.ts` | 7 | text/tag filters, server scope, column/archive selection, neighbours, status keys |
 | `data/actions.test.ts` | 2 | worktree payload: base ref, sanitized name, blank fallbacks |

@@ -8,7 +8,7 @@ The board file's exact behavior is in [`board-file.md`](board-file.md).
 
 - [ ] `npm ci` from a clean checkout
 - [ ] `npm run typecheck` exits 0
-- [ ] `npm test` passes every case (**139** at the time of writing; update the docs if the count changes)
+- [ ] `npm test` passes every case (**141** at the time of writing; update the docs if the count changes)
 - [ ] `npm run build` emits `dist/gui-experimental.cjs`
 - [ ] A second build is byte-identical (`cp dist/gui-experimental.cjs /tmp/a && npm run build && cmp /tmp/a dist/gui-experimental.cjs`)
 - [ ] The bundle requires only `effect`, `@opencode/plugin/gui`, `@opencode/plugin/rpc`, `solid-js`, and `solid-js/web`
@@ -69,6 +69,9 @@ The board file's exact behavior is in [`board-file.md`](board-file.md).
 - [ ] Deleting an existing-folder task never removes the folder
 - [ ] A generated worktree label has the `feature/word-word-NNN` shape; Generate produces another valid name
 - [ ] Creating a worktree task produces a detached worktree at the base ref; the plugin does not create or delete a git branch
+- [ ] Long switch and field descriptions wrap instead of clipping at the dialog edge
+- [ ] Choosing **Default branch** keeps its text visible and detaches the worktree at HEAD
+- [ ] An existing folder inside the project keeps the task on the same board; a nested OpenCode project folder is rejected
 - [ ] A linked session opens in the task directory by default with the prompt prefilled and bound immediately
 - [ ] Auto-prompt creates a session, sends the prompt, binds it, and opens its tab
 - [ ] A worktree creation failure leaves no task record and shows the server error

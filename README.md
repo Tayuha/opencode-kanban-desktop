@@ -12,7 +12,7 @@ OpenCode Desktop's native project, worktree, session, tab, dialog, and notificat
 
 **Release scope:** local/private v0.1.1 for OpenCode Desktop 2.3.2. The package is `private: true`
 and installs from this checkout; it is not published to npm. The documented v0.1.1 baseline passes
-`typecheck`, 139 unit tests, and a deterministic single-file GUI build.
+`typecheck`, 141 unit tests, and a deterministic single-file GUI build.
 
 ## Requirements
 
@@ -194,9 +194,11 @@ inside the worktree before committing. The plugin never runs shell commands, cre
 deletes branches.
 
 **Existing folder** is optional. Browse to or type an absolute folder and the task runs there
-instead of the project root or a new worktree. The plugin never creates or removes that folder;
-selecting it turns the worktree switch off. If the folder is a git repository, the dialog prefills
-its current branch.
+instead of the project root or a new worktree. The field shows the project root as its reference,
+and the task stays on this project's board. A folder that belongs to another OpenCode project is
+rejected, because a session there would open that project's board. The plugin never creates or
+removes that folder; selecting it turns the worktree switch off. If the folder is a git repository,
+the dialog prefills its current branch.
 
 After creation:
 
@@ -488,7 +490,7 @@ Two common cases:
 
 ```bash
 npm run typecheck   # tsc --noEmit
-npm test            # vitest: 139 cases
+npm test            # vitest: 141 cases
 npm run build       # dist/gui-experimental.cjs
 npm run dev         # vite build --watch
 npm run coverage    # optional coverage run

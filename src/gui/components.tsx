@@ -70,3 +70,18 @@ export function Field(props: { label: string; hint?: string; children: JSX.Eleme
     </div>
   )
 }
+
+/** A wrapping label and description beside a control, for long settings copy. */
+export function SwitchRow(props: { label: string; description?: string; children: JSX.Element }) {
+  return (
+    <div class="kb-switch-row">
+      <div class="kb-switch-copy">
+        <span class="kb-switch-label">{props.label}</span>
+        <Show when={props.description}>
+          <span class="kb-switch-description">{props.description}</span>
+        </Show>
+      </div>
+      <div class="kb-switch-control">{props.children}</div>
+    </div>
+  )
+}

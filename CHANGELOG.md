@@ -28,9 +28,12 @@ Do not tag yet. Add v0.1.2 changes here until the release is closed; the package
 - Worktree creation now matches OpenCode 2.3.2: it passes the base ref and a sanitized worktree
   name instead of a new branch. The API creates a detached worktree and never creates a git branch;
   the task's branch name is a label until you create the branch inside the worktree.
+- The new-task dialog now wraps switch descriptions instead of clipping them, keeps the “Default
+  branch” label visible, shows the project root as the existing-folder reference, and rejects
+  folders that belong to a different OpenCode project.
 - Detail labels no longer render literal `{{time}}` placeholders; the Changes empty copy no longer
   says “worktree” for tasks without one.
-- Added 11 board-map tests, 2 board-file removal tests, and 2 worktree payload tests; the suite now has 139 cases.
+- Added 11 board-map tests, 2 board-file removal tests, 2 worktree payload tests, and 2 project-containment tests; the suite now has 141 cases.
 
 ## v0.1.1 — 2026-11-22
 

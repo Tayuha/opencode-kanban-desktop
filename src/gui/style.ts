@@ -434,12 +434,17 @@ button.kb-tag:hover { background: color-mix(in oklab, var(--kb-tag) 20%, transpa
 
 /* Dialogs */
 .kb-form { display: flex; flex-direction: column; gap: 10px; }
-.kb-field { display: flex; flex-direction: column; gap: 4px; }
+.kb-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .kb-field-label { font-weight: 600; font-size: 11px; }
-.kb-field-hint { color: var(--kb-muted); font-size: 11px; }
+.kb-field-hint { color: var(--kb-muted); font-size: 11px; white-space: normal; overflow-wrap: anywhere; }
 .kb-field-row { display: flex; align-items: center; gap: 6px; }
 .kb-field-row > * { min-width: 0; }
 .kb-field-row > :first-child { flex: 1 1 auto; }
+.kb-switch-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: start; min-width: 0; }
+.kb-switch-copy { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.kb-switch-label { font-size: 11px; font-weight: 600; }
+.kb-switch-description { color: var(--kb-muted); font-size: 11px; line-height: 1.35; white-space: normal; overflow-wrap: anywhere; }
+.kb-switch-control { display: flex; align-items: center; padding-top: 1px; }
 .kb-textarea {
   min-height: 64px;
   resize: vertical;
