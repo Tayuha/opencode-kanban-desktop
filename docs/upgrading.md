@@ -20,8 +20,8 @@ Current line:
 
 - `v0.1.0` — first local/private release.
 - `v0.1.1` — project-list duplicate fix; no board data migration.
-- `v0.1.2` (staged, untagged) — per-project boards and project-scoped board files; one-time
-  split of the v0.1.1 global board.
+- `v0.1.2` — per-project boards and project-scoped board files at project roots; one-time split
+  of the v0.1.1 global board. Removed the task/board folder pickers.
 
 ## Release process
 

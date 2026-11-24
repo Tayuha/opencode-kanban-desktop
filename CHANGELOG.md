@@ -1,36 +1,49 @@
 # Changelog
 
-## Unreleased (v0.1.2)
+## v0.1.2 — 2026-11-24
 
-Do not tag yet. Add v0.1.2 changes here until the release is closed; the package version stays
-`0.1.1` until then.
+Feature patch over v0.1.1. The board store migrates once; back up `drafts.sqlite` and export the
+boards you care about before upgrading.
 
-- Added `AGENTS.md`, the guide for AI agents working on the plugin.
-- Added `docs/upgrading.md`, the release, upgrade, migration, and rollback plan.
-- README now links both documents.
-- **Per-project boards.** Boards are now stored one per canonical project folder in the
+### Added
+
+- **Per-project boards.** Boards are stored one per canonical project folder in the
   `plugin.nmdra.kanban-desktop.boards` state row. Switching projects swaps the whole board instead
   of showing or exporting another project's cards.
 - **Project-scoped board files.** Export, auto-export, reload, and auto-reload read and write only
-  the selected project's `kanban-board.json` at its project root. Selecting a project with a board
+  the selected project's `kanban-board.json` in its project root. Selecting a project with a board
   but no file creates its snapshot; an existing file is not overwritten just by selecting it.
-- **One-time migration.** The v0.1.1 global `board` row is split by each task's `projectRoot` into
-  per-project boards, then reset. A legacy whole-installation snapshot is narrowed to the selected
-  project on reload; tasks for other folders are ignored.
-- Reload confirmation and notes now describe a project replacement instead of a whole-installation
+- Added `AGENTS.md`, the guide for AI agents working on the plugin, and `docs/upgrading.md`, the
+  release, upgrade, migration, and rollback plan. The README links both.
+
+### Changed
+
+- The task **Existing folder** picker and the per-project **board folder** picker were removed.
+  New tasks run in a worktree or the project root, and board files live at `<projectRoot>`.
+- Reload confirmation and notes describe a project replacement instead of a whole-installation
   replacement.
-- Auto-reload now uses a canonical board key and distinguishes an effective board update from a
-  file that normalizes to the same board (for example duplicate task IDs), instead of claiming
-  the board updated.
-- Worktree creation now matches OpenCode 2.3.2: it passes the base ref and a sanitized worktree
-  name instead of a new branch. The API creates a detached worktree and never creates a git branch;
-  the task's branch name is a label until you create the branch inside the worktree.
-- The new-task dialog now wraps switch descriptions instead of clipping them and keeps the
-  “Default branch” label visible. The task folder picker and the per-project board-folder
-  override were removed; tasks run in a worktree or the project root.
+- Auto-reload uses a canonical board key and distinguishes an effective board update from a file
+  that normalizes to the same board (for example duplicate task IDs).
+- Worktree creation matches OpenCode 2.3.2: it passes the base ref and a sanitized worktree name.
+  The API creates a detached worktree and never creates a git branch; the task's branch name is a
+  label until you create the branch inside the worktree.
+- The new-task dialog wraps switch descriptions instead of clipping them and keeps the
+  “Default branch” label visible.
+- Deleting a worktree task opens one choice dialog: keep the worktree or remove it with the card.
+  The branch is never deleted.
+
+### Fixed
+
 - Detail labels no longer render literal `{{time}}` placeholders; the Changes empty copy no longer
   says “worktree” for tasks without one.
-- Added 10 board-map tests and 2 worktree payload tests; the suite now has 136 cases.
+
+### Upgrade
+
+From v0.1.1, the old global `board` row is split once by each task's `projectRoot` into per-project
+boards, then reset. A legacy whole-installation snapshot is narrowed to the selected project on
+reload; tasks for other folders are ignored. See [`docs/upgrading.md`](docs/upgrading.md).
+
+The automated suite now has 136 cases, including board-map and worktree-payload coverage.
 
 ## v0.1.1 — 2026-11-22
 

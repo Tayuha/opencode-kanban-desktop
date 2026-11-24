@@ -10,7 +10,7 @@ A local/private GUI kanban plugin for **OpenCode Desktop 2.3.2**. It is a deskto
 notifications. It does **not** use tmux, launch terminals, kill processes, or make external network
 requests.
 
-Current release line: **v0.1.1**. The package is `private: true` and is installed from a git
+Current release line: **v0.1.2**. The package is `private: true` and is installed from a git
 checkout, not npm.
 
 ## Read first
@@ -30,7 +30,7 @@ checkout, not npm.
 Checkout: /home/tayuha/Projects/opencode-plugins-creation/opencode-kanban-desktop
 Remote:   git@github.com:Tayuha/opencode-kanban-desktop.git (SSH)
 Branch:   main
-Tags:     v0.1.0, v0.1.1 (immutable)
+Tags:     v0.1.0, v0.1.1, v0.1.2 (immutable)
 ```
 
 - Never move, delete, or re-create a published tag. Fix forward with a new patch version.
@@ -148,7 +148,7 @@ npm ci
 ```
 
 Then fully quit and reopen Desktop. The config path does not change. Patch releases normally need
-no data migration; v0.1.2 is the exception (it splits the v0.1.1 global board, see
+no data migration; v0.1.2 is the exception (it split the v0.1.1 global board, see
 [`docs/upgrading.md`](docs/upgrading.md)).
 
 Release process:
@@ -180,12 +180,8 @@ restart. Never rewrite a released tag. The full runbook is [`docs/upgrading.md`]
 
 ## Current open work
 
-- **v0.1.2 staging** — per-project boards, project-scoped files, and the canonical no-change fix
-  are committed on `main`; the tag stays open until the user closes it.
-- **Per-project boards** — implemented; verify in Desktop that switching projects swaps the board,
-  that a snapshot contains only that project's tasks, and that the v0.1.1 board split preserved all
-  cards.
-- **Verify the worktree and session flow** — deferred; use the plugin repository or a throwaway git
-  repo. See K-05/06/16/17/18 and K-20..22.
-- Still open for a full release: screenshots/docs completion, custom icons when the SDK exposes
-  them, fresh-install smoke test, macOS/Windows testing.
+- **v0.1.2** — released. Per-project boards/files, the one-time v0.1.1 split, the canonical
+  no-change fix, and the worktree/session flow were verified in Desktop.
+- **v0.1.3** — open for README screenshots and any follow-ups.
+- Still open for a full release: screenshots/docs completion, fresh-install smoke test, custom
+  icons when the SDK exposes them, and macOS/Windows testing.

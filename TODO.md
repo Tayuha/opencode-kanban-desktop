@@ -8,15 +8,17 @@ board; this file is the durable release view. The gate to run is
 - **Target:** local/private v0.1.x on OpenCode Desktop **2.3.2**
 - **Upgrade plan:** [`docs/upgrading.md`](docs/upgrading.md)
 - **Platform exercised:** Linux
-- **Last updated:** 2026-11-23
+- **Last updated:** 2026-11-24
 
 ## Current state
 
 > **v0.1.1** is a patch release over v0.1.0: it fixes duplicate project entries for the same folder. No board data migration is required. See [`CHANGELOG.md`](CHANGELOG.md).
 >
-> **v0.1.2 is open** but not tagged. It adds docs, the canonical no-change fix, and per-project
-> boards/files with a one-time split of the v0.1.1 global board. Add changes under `Unreleased` in
-> `CHANGELOG.md`; bump the package version and create the tag only when the release is closed.
+> **v0.1.2 is released** (2026-11-24): per-project boards/files, the one-time v0.1.1 split, the
+> canonical no-change fix, and the detached-worktree/delete-choice fixes. See
+> [`CHANGELOG.md`](CHANGELOG.md).
+>
+> **v0.1.3 is open** for the README screenshots and any follow-ups.
 
 Implemented and unit-tested:
 
@@ -87,7 +89,7 @@ Tick every item before tagging a release. Each maps to a card on the board.
       Remove the checkout from the config, restart, reinstall from the global config, and confirm
       board state, tags, links, columns, and settings recover.
 - [x] **Commit and push the plugin** (card `chore/git-upload`)
-      Repository initialized; `main`, `v0.1.0`, and patch tag `v0.1.1` pushed to
+      Repository initialized; `main`, `v0.1.0`, `v0.1.1`, and `v0.1.2` pushed to
       `github.com:Tayuha/opencode-kanban-desktop` (SSH). The remaining release gates still apply.
 - [ ] **Run and sign `docs/release-checklist.md`**
       No unchecked P0 without a written waiver.
@@ -125,8 +127,8 @@ Implemented and covered by the 136 automated tests:
 - [x] Documentation audited and expanded; AGENTS/upgrading/README/design/test docs current (2026-11-23)
 - [x] AI agent guide documented in `AGENTS.md` (2026-11-23)
 - [x] Per-project boards and project-scoped board files implemented; 136 tests pass (2026-11-23)
-- [ ] Per-project board split and project switching verified in Desktop
-- [ ] v0.1.2 release closed, version bumped, changelog finalized, tag created
+- [x] Per-project board split and project switching verified in Desktop (2026-11-24)
+- [x] v0.1.2 release closed, version bumped, changelog finalized, tag created (2026-11-24)
 
 ## P1 — follow-ups
 
