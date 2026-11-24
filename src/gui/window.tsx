@@ -43,7 +43,6 @@ import {
 } from "./model/board.ts"
 import { findProject, mergeProject, projectForSession, projectRows } from "./model/projects.ts"
 import {
-  boardDirectory,
   boardForProject,
   boardIn,
   boardKeyFor,
@@ -419,8 +418,7 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
     if (!key) return
     if (boardKey(next) === written.get(key) && boards()[key] && sameBoard(boards()[key]!, next)) return
     ctx.stores.boards.set(withBoard(boards(), key, next))
-    const directory = boardDirectory(ctx.stores.prefs.value, key, root ?? "")
-    if (directory) exportDirs.set(key, directory)
+    if (root) exportDirs.set(key, root)
     scheduleExport(key)
   }
 
@@ -448,7 +446,7 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
       ctx.stores.boards.set(nextMap)
       for (const key of touched) {
         if (!key.startsWith("id:")) {
-          exportDirs.set(key, boardDirectory(ctx.stores.prefs.value, key, key))
+          exportDirs.set(key, key)
         }
         scheduleExport(key)
       }
@@ -615,7 +613,7 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
     const key = boardKeyFor(boards(), project.root, project.id)
     if (!key || !boards()[key]) return
     migrated = false
-    exportDirs.set(key, boardDirectory(ctx.stores.prefs.value, key, project.root))
+    exportDirs.set(key, project.root)
     written.delete(key)
     scheduleExport(key)
   })
@@ -657,7 +655,7 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
     if (!session || !project) return
     const key = boardKeyFor(boards(), project.root, project.id)
     if (!key || !boards()[key]) return
-    provisionBoardFile(key, boardDirectory(ctx.stores.prefs.value, key, project.root))
+    provisionBoardFile(key, project.root)
   })
 
   const pollExternal = async () => {
@@ -669,7 +667,7 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
 
     const key = boardKeyFor(boards(), project.root, project.id)
     if (!key) return
-    const directory = boardDirectory(ctx.stores.prefs.value, key, project.root)
+    const directory = project.root
 
     reloadPolling = true
     try {
@@ -830,9 +828,8 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
       const project = findProject(projectsOf(session), input.projectID)
       if (!project) throw new Error(ctx.t("task.validation.project"))
 
-      const directory = input.directory?.trim() || undefined
       let worktreePath: string | undefined
-      if (input.makeWorktree && !directory) {
+      if (input.makeWorktree) {
         try {
           worktreePath = await createWorktree(
             session.server.client,
@@ -860,7 +857,6 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
         tagIDs: input.tagIDs,
         baseBranch: input.baseBranch,
         worktreePath,
-        directory,
         notes: input.notes,
       })
       saveBoard(project.root, next, project.id)
@@ -869,12 +865,8 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
 
       notify(
         "success",
-        directory
-          ? ctx.t("toast.createdDirectory")
-          : worktreePath
-            ? ctx.t("toast.createdWorktree")
-            : ctx.t("toast.created"),
-        directory ?? worktreePath ?? project.root,
+        worktreePath ? ctx.t("toast.createdWorktree") : ctx.t("toast.created"),
+        worktreePath ?? project.root,
       )
 
       if (input.autoPrompt) {
@@ -1228,7 +1220,7 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
       }
       const key = boardKeyFor(boards(), project.root, project.id)
       const board = projectBoard(project.root, project.id)
-      const directory = boardDirectory(prefs(), key, project.root)
+      const directory = project.root
       try {
         const snapshot = boardKey(board)
         const json = JSON.stringify(board, null, 2) + "\n"
@@ -1265,7 +1257,7 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
       }
       const key = boardKeyFor(boards(), project.root, project.id)
       const currentBoard = projectBoard(project.root, project.id)
-      const directory = boardDirectory(prefs(), key, project.root)
+      const directory = project.root
 
       if (currentBoard.tasks.length > 0) {
         const ok = await ctx.dialogs.confirm({
@@ -1321,101 +1313,6 @@ export const setup: Plugin.Setup<typeof definition> = (ctx) => {
         } else {
           notify("error", ctx.t("toast.boardReloadFailed"), errorText(error))
         }
-      }
-    },
-
-    chooseBoardFolder: async (session, projectID) => {
-      const project = findProject(projectsOf(session), projectID)
-      if (!project) {
-        notify("error", ctx.t("toast.noProject"))
-        return
-      }
-      if (!ctx.desktop) {
-        notify("error", ctx.t("boardFolder.unavailable"))
-        return
-      }
-      const key = boardKeyFor(boards(), project.root, project.id)
-      const current = prefs().boardDirs?.[key]
-      try {
-        const choice = await ctx.dialogs.select<"root" | "pick">({
-          title: ctx.t("boardFolder.title"),
-          placeholder: ctx.t("boardFolder.placeholder"),
-          current: current ? "pick" : "root",
-          options: [
-            {
-              value: "root",
-              title: ctx.t("boardFolder.root"),
-              description: project.root,
-              group: ctx.t("boardFolder.group"),
-            },
-            {
-              value: "pick",
-              title: ctx.t("boardFolder.pick"),
-              description: current ?? ctx.t("boardFolder.pick.description"),
-              group: ctx.t("boardFolder.group"),
-            },
-          ],
-        })
-        if (!choice) return
-
-        let directory: string | undefined
-        if (choice === "pick") {
-          const picked = await ctx.desktop.pick({
-            directory: true,
-            title: ctx.t("boardFolder.pick"),
-          })
-          directory = picked[0]
-          if (!directory) return
-        }
-
-        const boardDirs = { ...(prefs().boardDirs ?? {}) }
-        if (directory) boardDirs[key] = directory
-        else delete boardDirs[key]
-        const previous = boardDirectory(prefs(), key, project.root)
-        const target = directory ?? project.root
-        ctx.stores.prefs.set({ ...prefs(), boardDirs })
-        exportDirs.set(key, target)
-        written.delete(key)
-        await exportKey(key, true)
-
-        let cleaned = false
-        if (previous !== target) {
-          const remove = await ctx.dialogs.confirm({
-            title: ctx.t("boardFolder.remove.title"),
-            description: ctx.t("boardFolder.remove.description", { folder: previous }),
-            confirm: ctx.t("boardFolder.remove.confirm"),
-            danger: true,
-          })
-          if (remove) {
-            try {
-              await ctx.client.rpc(KanbanBoard).remove({ directory: previous })
-              cleaned = true
-            } catch (error) {
-              const type = rpcErrorType(error)
-              notify(
-                "error",
-                type === "rpc.method_not_found" || type === "rpc.unavailable"
-                  ? ctx.t("toast.boardReloadUnavailable")
-                  : ctx.t("boardFolder.removeFailed"),
-                errorText(error),
-              )
-            }
-          }
-        }
-
-        notify(
-          "success",
-          directory ? ctx.t("boardFolder.saved") : ctx.t("boardFolder.reset"),
-          previous !== target
-            ? `${target}\n${
-                cleaned
-                  ? `${ctx.t("boardFolder.removed")}: ${previous}`
-                  : `${ctx.t("boardFolder.previous")}: ${previous}`
-              }`
-            : target,
-        )
-      } catch (error) {
-        notify("error", ctx.t("boardFolder.failed"), errorText(error))
       }
     },
 

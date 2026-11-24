@@ -12,54 +12,6 @@ export function baseName(path: string): string {
   return parts[parts.length - 1] || path
 }
 
-/** Canonicalizes a folder for containment checks without resolving symlinks. */
-export function normalizedFolder(value: string): string {
-  const slashed = value.replace(/\\/g, "/").replace(/\/+/g, "/")
-  const prefix = slashed.startsWith("/") ? "/" : ""
-  const parts: string[] = []
-  for (const part of slashed.split("/")) {
-    if (!part || part === ".") continue
-    if (part === "..") {
-      parts.pop()
-      continue
-    }
-    parts.push(part)
-  }
-  const joined = `${prefix}${parts.join("/")}`.replace(/\/+$/, "")
-  return joined || "/"
-}
-
-/** Whether a folder is the root itself or is inside it. Windows paths compare case-insensitively. */
-export function insideFolder(root: string, folder: string): boolean {
-  if (!root.trim() || !folder.trim()) return false
-  const base = normalizedFolder(root)
-  const target = normalizedFolder(folder)
-  const windows = /^[a-zA-Z]:/.test(base)
-  const left = windows ? base.toLowerCase() : base
-  const right = windows ? target.toLowerCase() : target
-  return right === left || right.startsWith(left === "/" ? "/" : `${left}/`)
-}
-
-/**
- * A project root nested inside the current project that contains the folder. OpenCode assigns a
- * session there to the nested project, so the panel would switch to a different board.
- */
-export function nestedProjectFor(
-  rows: readonly ProjectRow[],
-  currentID: string | undefined,
-  folder: string,
-): ProjectRow | undefined {
-  const current = currentID ? rows.find((row) => row.id === currentID) : undefined
-  if (!current?.root || !folder.trim()) return undefined
-  return rows.find(
-    (row) =>
-      row.id !== current.id &&
-      !!row.root &&
-      insideFolder(current.root, row.root) &&
-      insideFolder(row.root, folder),
-  )
-}
-
 export function projectRows(projects: readonly RawProject[]): ProjectRow[] {
   const rows: ProjectRow[] = []
   const seen = new Set<string>()

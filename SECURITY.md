@@ -75,10 +75,10 @@ Trust boundaries worth naming:
   with worktree removal may send its `worktreePath` to the worktree API after confirmation. Reload
   only files you trust.
 - **The board-file RPC trusts its caller's directory.** It accepts an absolute directory, checks
-  that it exists, and reads/writes/removes only the fixed filenames there. It does not authenticate
-  the caller beyond the local server's RPC surface. Any local client able to call the RPC could pass
-  another existing absolute directory and create, replace, or remove those three filenames. The GUI
-  always passes the selected project's board folder, and removal requires its own confirmation.
+  that it exists, and reads/writes only the fixed filenames there. It does not authenticate the
+  caller beyond the local server's RPC surface. Any local client able to call the RPC could pass
+  another existing absolute directory and create or replace those three filenames. The GUI always
+  passes the selected project's root.
 - **Exported board files are sensitive.** They contain task titles, notes, branches, worktree
   paths, project roots, and session IDs. Exporting into a git project can leave an untracked or
   modified file. Treat it like project metadata.
@@ -102,21 +102,18 @@ Writes:
   actions);
 - `data.session.sync` to make a session known to the app;
 - creating a session, prefilling its composer, opening a session tab (`ctx.tabs.open`);
-- `nmdra.kanban-desktop.board.save` writes `<board folder>/kanban-board.json`,
+- `nmdra.kanban-desktop.board.save` writes `<projectRoot>/kanban-board.json`,
   `kanban-board.json.bak`, or `kanban-board.backup.json` atomically (fixed filenames,
   5,000,000-byte cap);
-- `nmdra.kanban-desktop.board.remove` removes those three fixed filenames from a previous board
-  folder, only after the user confirms the folder cleanup;
 - its own board and preferences stores;
 - the clipboard (`ctx.system.copy`) and the file manager (`ctx.desktop.reveal`) on explicit
   actions;
 - app notifications (`ctx.attention.notify`), subject to Desktop's settings.
 
-The board-file RPC reads, writes, and removes only those fixed filenames under the supplied
-absolute directory. Writes use a temporary file plus rename. Reads reject relative paths, missing
-files, non-files, oversized content, invalid JSON, and aborted requests. Writes reject relative or
+The board-file RPC reads and writes only those fixed filenames under the supplied absolute
+directory. Writes use a temporary file plus rename. Reads reject relative paths, missing files,
+non-files, oversized content, invalid JSON, and aborted requests. Writes reject relative or
 missing directories, invalid JSON, oversized content, unknown targets, and aborted requests.
-Removal rejects relative paths and aborted requests; missing files are ignored.
 
 ## What the plugin does not do
 
@@ -142,8 +139,6 @@ persist or transmit the rest.
   requires a second, explicit force confirmation that shows the server error.
 - Deleting a task does not stop its session. Removing a worktree does not delete its branch.
 - `Reset board data` has its own confirmation and never removes worktrees or sessions.
-- Changing or resetting a board folder writes the new file first, then asks before removing the old
-  folder's three fixed snapshot files.
 - Reload confirms when the selected project's board has any task, writes a pre-reload backup first,
   and cancels if that backup fails.
 - Export writes atomically and aborts if the previous file cannot be preserved as `.bak`.
@@ -159,10 +154,9 @@ persist or transmit the rest.
   `plugin.nmdra.kanban-desktop.prefs`. The older `plugin.nmdra.kanban-desktop.board` row is read
   once during migration and then kept empty. A backup of that database restores all Desktop plugin
   storage, not only Kanban.
-- **Exported snapshots:** `<board folder>/kanban-board.json`, with
+- **Exported snapshots:** `<projectRoot>/kanban-board.json`, with
   `kanban-board.json.bak` and `kanban-board.backup.json` as described in
-  [`docs/board-file.md`](docs/board-file.md). The board folder is the project root unless the user
-  chose another folder for that project.
+  [`docs/board-file.md`](docs/board-file.md).
 - **Worktrees, branches, sessions, messages:** managed by OpenCode, outside the plugin.
 
 ## Handling a report

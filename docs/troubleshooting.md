@@ -55,7 +55,7 @@ is not a merge. Other projects' boards are untouched. Only a missing `sessionID`
 task with the same ID is carried over.
 
 1. Stop using the board.
-2. In the project's board folder, look for `kanban-board.backup.json`. It holds that project's
+2. In the project root, look for `kanban-board.backup.json`. It holds that project's
    live board from before the reload, but only if the board had at least one task, you confirmed,
    and the backup write succeeded.
 3. Copy it aside before reusing it, because a later confirmed reload of a non-empty board
@@ -78,7 +78,7 @@ from an earlier reload; check its timestamp.
 ## Reload says the file is missing or invalid
 
 - Reload reads the selected project's board `kanban-board.json` (its root unless you chose another
-  board folder), not a task worktree.
+  project root), not a task worktree.
 - Export first to create the file, or copy a known-good snapshot there.
 - Invalid JSON is rejected before the board changes. Validate with
   `node -e 'JSON.parse(require("fs").readFileSync("kanban-board.json","utf8"))'`.
@@ -102,10 +102,10 @@ The toast asking for a restart is the intended message for `rpc.method_not_found
 
 ## Export fails
 
-- The project's board folder (its root unless overridden) must exist and be writable.
+- The project root must exist and be writable.
 - A `.bak` copy failure aborts the export before the board file is replaced; free space and fix
   permissions, then retry.
-- Export writes **only the selected project's board** to its board folder. Other projects' cards
+- Export writes **only the selected project's board** to its project root. Other projects' cards
   are not included.
 - Exporting into a git project can create an untracked/modified `kanban-board.json`. Decide whether
   to commit it or add it to the project's `.gitignore`.

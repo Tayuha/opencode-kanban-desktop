@@ -76,8 +76,6 @@ export type Prefs = {
   lastProjectID?: string
   /** The board key last shown in the panel, used by settings and palette commands. */
   lastBoardKey?: string
-  /** Optional board-file folders, keyed by the same project key as the board map. */
-  boardDirs?: Readonly<Record<string, string>>
 }
 
 export type ProjectRow = {

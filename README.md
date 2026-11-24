@@ -12,7 +12,7 @@ OpenCode Desktop's native project, worktree, session, tab, dialog, and notificat
 
 **Release scope:** local/private v0.1.1 for OpenCode Desktop 2.3.2. The package is `private: true`
 and installs from this checkout; it is not published to npm. The documented v0.1.1 baseline passes
-`typecheck`, 141 unit tests, and a deterministic single-file GUI build.
+`typecheck`, 136 unit tests, and a deterministic single-file GUI build.
 
 ## Requirements
 
@@ -126,7 +126,6 @@ the task works in the project root.
 | Composer pill | Above the composer while the routed project has active cards; click the pill to open the board, or click a running task in its menu |
 | Reload board | The download icon in the panel header, or **Kanban: reload board from kanban-board.json** |
 | Export board | The upload icon in the panel header, or **Kanban: export board to kanban-board.json** |
-| Board file folder | The folder icon in the panel header; use the project root or choose another folder for this project |
 | Tags | The Tags button in the panel header, or **Kanban: manage tags** |
 | Columns | The Columns button in the panel header, or **Kanban: manage columns** |
 | Compact columns | The collapse/expand button in the panel header, `C`, or **Kanban: toggle compact columns** |
@@ -182,10 +181,10 @@ v0.1.1 tags are split into their owning project during the one-time migration.
 
 ### Tasks, worktrees, and sessions
 
-Creating a task asks for a project, title, branch name, base branch, folder, column, notes, tags,
-and an initial prompt. With **Create a git worktree** on (the default for git projects), the plugin
-calls OpenCode's native worktree API and stores the returned directory. The branch name is generated
-as `feature/<adjective>-<noun>-NNN` when left empty; the **Generate** button replaces the field with
+Creating a task asks for a project, title, branch name, base branch, column, notes, tags, and an
+initial prompt. With **Create a git worktree** on (the default for git projects), the plugin calls
+OpenCode's native worktree API and stores the returned directory. The branch name is generated as
+`feature/<adjective>-<noun>-NNN` when left empty; the **Generate** button replaces the field with
 another generated name.
 
 OpenCode 2.3.2 creates a **detached worktree** from the base ref and does **not** create a git
@@ -193,19 +192,15 @@ branch. The task's branch name labels the worktree directory and the card; creat
 inside the worktree before committing. The plugin never runs shell commands, creates branches, or
 deletes branches.
 
-**Existing folder** is optional. Browse to or type an absolute folder and the task runs there
-instead of the project root or a new worktree. The field shows the project root as its reference,
-and the task stays on this project's board. A folder that belongs to another OpenCode project is
-rejected, because a session there would open that project's board. The plugin never creates or
-removes that folder; selecting it turns the worktree switch off. If the folder is a git repository,
-the dialog prefills its current branch.
+Tasks run in a worktree or the project root. Legacy tasks that already store an existing folder
+still use it; the new-task dialog no longer offers folder selection.
 
 After creation:
 
 - With **Open a session after creating** on (the default), a **linked session** opens in the task's
-  directory (worktree, existing folder, or project root) with the initial prompt filled into its
-  composer for review. The session is bound immediately, so the card and composer pill track it
-  before the prompt is sent.
+  directory (worktree or project root) with the initial prompt filled into its composer for review.
+  The session is bound immediately, so the card and composer pill track it before the prompt is
+  sent.
 - With **Send the initial prompt automatically** on, the plugin creates the session, sends the
   prompt, and opens its tab without waiting for review.
 - With both off, the card is created and nothing opens.
@@ -217,7 +212,7 @@ retroactively open or send anything for existing cards.
 task** setting:
 
 - **Reuse** focuses the task's linked or directory-matched session; if it has none, a session is
-  created in its worktree, existing folder, or project root, then bound to the task.
+  created in its worktree or project root, then bound to the task.
 - **Start a new session** always creates and binds a fresh session, leaving the old one in its tab.
 - **Ask each time** shows the two choices when the task has a session binding; if it has none,
   Ask creates one.
@@ -268,8 +263,7 @@ the task's root session; they appear as descendants in the detail view.
   shown on cards and in the detail view; when no todo tool was used, progress is simply absent.
 - **Subagents** are the descendants of the task's root session, with their own status, cost, and
   todo count when available.
-- **Changes** in the detail view read VCS status for the task's worktree, existing folder, or
-  project root, show
+- **Changes** in the detail view read VCS status for the task's worktree or project root, show
   the base branch, and list up to 60 files with additions and deletions.
 - **Completion notifications** fire when a watched task's session goes from running to idle. They
   click through to the session and follow Desktop's notification settings.
@@ -281,8 +275,8 @@ lifecycle and limits.
 
 ### Export and reload
 
-Both actions operate on **the project selected in the panel's board**. The selected project also
-chooses the folder, which defaults to its root.
+Both actions operate on **the project selected in the panel's board**. The file lives in that
+project's root.
 
 - **Auto-export is on by default.** After column, tag, task, archive, undo, session-link, or
   move changes settle for 1.5 seconds, that project's live board is written to its
@@ -292,11 +286,8 @@ chooses the folder, which defaults to its root.
 - **A missing project file is created when the project is selected.** With auto-export on, a
   project that has a board but no `kanban-board.json` gets one after the debounce. An existing file
   is left alone; use **Reload board** to import it.
-- **Changing or resetting the board folder writes the current board to the new folder.** An
-  existing file there is kept as `.bak`. Desktop then offers to remove the previous folder's three
-  snapshot files; declining leaves them in place.
-- **Export board** writes immediately and reports the path and backup path. It uses the project's
-  board folder.
+- **Export board** writes immediately and reports the path and backup path. It uses the project
+  root.
 - **Auto-reload is on by default.** While a session is active, the plugin checks the selected
   project's `kanban-board.json` every two seconds. If the file changed externally and that project's
   live board has no unsaved changes, the board updates automatically. If you have unsaved live
@@ -391,7 +382,7 @@ On this Linux installation, Desktop's plugin storage is backed by
 `state` rows named `opencode.global.dat` / `plugin.nmdra.kanban-desktop.boards` and
 `plugin.nmdra.kanban-desktop.prefs`. The older `plugin.nmdra.kanban-desktop.board` row is read once
 during the upgrade and then kept empty. Treat the database as the authoritative copy until you
-export a project. The board file in a project's board folder is an explicit snapshot you create.
+export a project. The board file in the project root is an explicit snapshot you create.
 
 The project switcher in the panel header shows another project's entire board without leaving the
 session, including that project's columns and tags. Switching projects swaps the board; it does not
@@ -401,11 +392,9 @@ legacy tasks without one are claimed by the first server that opens a board know
 The local Desktop server is `sidecar`, so a single-server board legitimately has `sidecar` on every
 task.
 
-Each project's board file defaults to `<projectRoot>/kanban-board.json`. The folder icon in the
-panel header lets you choose a different folder for that project; the choice is stored per project
-folder. The RPC still writes only the fixed filenames (`kanban-board.json`,
-`kanban-board.json.bak`, and `kanban-board.backup.json`) into the chosen folder. Use a distinct
-folder per project; choosing one folder for several projects makes them share one file.
+Each project's board file is `<projectRoot>/kanban-board.json`. The RPC writes only the fixed
+filenames (`kanban-board.json`, `kanban-board.json.bak`, and `kanban-board.backup.json`) into the
+project root.
 
 ## Security and privacy
 
@@ -417,19 +406,18 @@ folder per project; choosing one folder for several projects makes them share on
 - **Bounded writes.** It creates and removes worktrees, creates and prompts sessions, opens tabs,
   writes its own plugin storage, copies explicit text to the clipboard, reveals folders, and writes
   the fixed board filenames. Nothing else.
-- **Board file RPC.** `nmdra.kanban-desktop.board.load` reads `<folder>/kanban-board.json`;
+- **Board file RPC.** `nmdra.kanban-desktop.board.load` reads `<projectRoot>/kanban-board.json`;
   `save` writes that file and its `.bak`, or `kanban-board.backup.json` for a pre-reload backup.
-  `<folder>` is the project root unless the user chose a board folder for that project. Fixed
-  filenames, atomic writes, a 5,000,000-byte cap, and no directory listings. The RPC trusts
-  the absolute directory supplied by its caller; the GUI passes the selected project's board folder.
+  Fixed filenames, atomic writes, a 5,000,000-byte cap, and no directory listings. The RPC trusts
+  the absolute directory supplied by its caller; the GUI passes the selected project's root.
 - **Destructive actions ask first.** Deleting a task, deleting a column or tag, removing a
   worktree, and resetting the board use the app's confirm dialogs. A dirty worktree needs a second
   explicit confirmation before a forced removal.
-- **Board files are sensitive.** They contain task titles, notes, branches, worktree and existing
-  folder paths, and session IDs. Exporting writes them into the project's board folder; decide
-  whether to commit, ignore, or delete the file. Reload treats the file as untrusted input and
+- **Board files are sensitive.** They contain task titles, notes, branches, worktree and legacy
+  folder paths, and session IDs. Exporting writes them into the project root; decide whether to
+  commit, ignore, or delete the file. Reload treats the file as untrusted input and
   validates/normalizes it, but a hand-edited `worktreePath` is still data that can be sent to the
-  worktree API during deletion; an existing `directory` is never removed.
+  worktree API during deletion; a legacy `directory` is never removed.
 
 See [`SECURITY.md`](SECURITY.md) for the reporting process, trust boundaries, and the full
 permission list.
@@ -454,8 +442,8 @@ permission list.
 - **Worktrees are detached.** OpenCode 2.3.2 creates a detached worktree from the base ref and
   never creates a git branch. The task's branch name is a label; create the branch inside the
   worktree before committing. Deleting the task removes the worktree, not a branch.
-- **Existing folders are never removed.** A task can run in a chosen folder, but deleting the task
-  does not delete that folder; only a plugin-created worktree can be removed.
+- **No folder selection.** New tasks run in a worktree or the project root. Legacy tasks with a
+  stored folder still open there, but there is no folder picker in the task dialog.
 - **No tag reordering.** This is a follow-up. Columns and tags are per project; reordering is not
   yet exposed. Undo is a short-lived toast, not a persistent history, and worktree removal is
   permanent.
@@ -490,7 +478,7 @@ Two common cases:
 
 ```bash
 npm run typecheck   # tsc --noEmit
-npm test            # vitest: 141 cases
+npm test            # vitest: 136 cases
 npm run build       # dist/gui-experimental.cjs
 npm run dev         # vite build --watch
 npm run coverage    # optional coverage run

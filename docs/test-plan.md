@@ -3,7 +3,7 @@
 Two layers: automated unit tests for everything that does not need a GUI, and a manual Desktop
 plan for the contributions and API calls that only the app can exercise.
 
-The documented v0.1.1 suite has **141 cases**. It covers the pure model, the live registry with a
+The documented v0.1.1 suite has **136 cases**. It covers the pure model, the live registry with a
 fake client, the board-file server code, the store definition, and formatting. It cannot cover
 Desktop's event timing, tabs, dialogs, notifications, clipboard, or worktree API.
 
@@ -20,14 +20,13 @@ npm run build
 The build is expected to produce `dist/gui-experimental.cjs`; a second build should be
 byte-identical and the bundle should require only the five shared modules.
 
-### `model/boards.test.ts` — 11 cases
+### `model/boards.test.ts` — 10 cases
 
 - normalizes project keys and Windows paths
 - splits the legacy global board by project folder
 - scopes an imported file to one project and ignores other folders
 - resolves a root-less migrated board by project id
 - writes board maps immutably and finds tasks across boards
-- uses a board-folder override or the project root
 
 ### `model/board.test.ts` — 60 cases
 
@@ -58,8 +57,8 @@ byte-identical and the bundle should require only the five shared modules.
 - records the server id and scopes positions per server
 - canonical board key ignores object key order
 - a normalized duplicate-id board compares equal
-- an existing folder wins over a worktree and the project root
-- an existing folder is stored and normalized without a worktree
+- a legacy existing folder wins over a worktree and the project root
+- a legacy existing folder is stored and normalized without a worktree
 - claims a legacy task on session bind or first server edit
 - preserves the server id through normalization
 - the default density is comfortable and the compact copy keys exist
@@ -84,7 +83,7 @@ byte-identical and the bundle should require only the five shared modules.
 - session list → row mapping
 - pinned session wins
 - a missing pin does not fall back to a newer worktree session
-- a session in an existing folder matches the task
+- a legacy existing folder matches the task
 - newest root session in the worktree wins for an unpinned task
 - no match returns nothing
 - nested descendants, no duplicates
@@ -104,7 +103,7 @@ byte-identical and the bundle should require only the five shared modules.
 - non-assistant messages and empty lists
 - progress percentage
 
-### `model/projects.test.ts` — 12 cases
+### `model/projects.test.ts` — 10 cases
 
 - names from the last path segment, Windows paths, trailing slashes
 - sort and dedupe project rows
@@ -141,7 +140,7 @@ byte-identical and the bundle should require only the five shared modules.
 - running → idle transition callback
 - failed reads keep the last snapshot and mark it stale
 
-### `server/board-file.test.ts` — 11 cases
+### `server/board-file.test.ts` — 9 cases
 
 - reads a valid board file
 - reports a missing file
@@ -180,8 +179,7 @@ byte-identical and the bundle should require only the five shared modules.
 ## Manual Desktop plan
 
 Use a throwaway git project with a remote base branch (for example `~/Projects/kanban-demo`).
-Create a second non-git folder for the plain-task path, and an extra folder for `K-05b`
-(existing-directory mode). Quit and reopen Desktop between install
+Create a second non-git folder for the plain-task path. Quit and reopen Desktop between install
 changes.
 
 Record the build or commit under test. Use two projects with cards for the cross-project export
@@ -194,7 +192,6 @@ cases.
 | K-03 | Run **Kanban: open full board** / `mod+alt+shift+k` | The same board opens in a large dialog; project switch and task dialogs work |
 | K-04 | Open the panel on a project with no tasks | Empty state with a **New task** button |
 | K-05 | Create a task in a non-git folder with worktree off | Card appears; no worktree; Open creates and binds a session in the project root |
-| K-05b | Create a task with **Existing folder** set to a folder inside the project (Browse or type), then open it | The card shows the folder; the linked session runs there; no worktree is created; the branch prefills the folder's current branch when it is a git repo |
 | K-06 | Create a task in a git project with worktree on and a prompt (**Open a session** on, the default) | A detached worktree is created at the base ref; no git branch is created; a linked session opens in that directory with the prompt prefilled; the card shows the worktree name and the session is bound before sending |
 | K-06b | Inspect the worktree with git | `git worktree list` shows it detached at the base commit; create a branch inside it manually; the plugin neither creates nor deletes that branch |
 | K-07 | Leave the branch name empty and enter a title; press **Generate** | A worktree label is generated as `feature/<word>-<word>-NNN`; **Generate** replaces it with another valid name |
@@ -212,9 +209,6 @@ cases.
 | K-15 | Archive a card, click **Undo** in the toast | The task returns to its original column and position within 8 seconds |
 | K-15b | Archive a card, open **Archive**, restore it | Task leaves the board, appears in Archive, returns to its original column and position |
 | K-16 | Delete a task with a worktree; decline worktree removal, then click **Undo** | Card is deleted; worktree remains on disk; Undo restores the card at its old position and the session keeps running |
-| K-16b | Delete an existing-folder task | No worktree-removal dialog; the folder still exists; the toast offers Undo like a plain card delete |
-| K-16c | Type a relative path, a missing absolute path, or a folder outside the project in **Existing folder**, then create | Each is rejected with matching copy; choose a folder inside the project |
-| K-16d | Choose a folder that is itself a different OpenCode project inside the current project | Rejected with “That folder belongs to another OpenCode project”; the current board is not replaced |
 | K-17 | Delete a task with a clean worktree; accept removal | Worktree is removed; no branch was created to clean up; the card is gone and no Undo action is offered |
 | K-18 | Delete a task with a dirty worktree; accept removal, then force | First removal fails; a force confirmation names the error; force removes it; declining keeps both task and worktree |
 | K-19 | Edit a task's title, column, notes, and tags | Changes persist across a reopen |
@@ -263,13 +257,10 @@ cases.
 | K-44c | Turn **Auto-export board** off, change the board, wait, then press Export | The file does not change automatically; manual Export still writes it and reports the paths |
 | K-44d | With auto-reload on and no unsaved live edits, edit `kanban-board.json` externally (move a card or rename a tag), wait three seconds | The live board updates automatically with a confirmation toast; manual Reload is not needed |
 | K-44e | Make a live board edit, then change the file externally before auto-export writes, wait | Auto-reload shows one conflict toast and leaves the live board untouched; manual Reload can still import the file |
-| K-45 | Reload after exporting; inspect the project's board folder | `kanban-board.backup.json` holds that project's pre-reload board; copy it aside, use it as `kanban-board.json`, and reload to recover |
+| K-45 | Reload after exporting; inspect the project root | `kanban-board.backup.json` holds that project's pre-reload board; copy it aside, use it as `kanban-board.json`, and reload to recover |
 | K-46 | With cards in two projects, export from project A, then inspect project A's file | The file contains only A's tasks, tags, columns, and archive state; project B's cards are absent; project B's root does not automatically get a file |
 | K-47 | With an empty board, press reload with a valid file | No confirmation and no new `kanban-board.backup.json`; the file loads |
 | K-48 | Delete a task's pinned session outside the board, then refresh | The pin is cleared after the server confirms it is missing; a toast explains; the card shows no session and **Unlink** disappears; Link/New session can attach another |
-| K-49 | Click the folder icon, choose a different board folder, change the board, then export | The file is written in the chosen folder; the choice survives a restart. Reset to **Project root**; the current board is written to the root again and the old folder's files are offered for removal |
-| K-49b | Reset the board folder to **Project root** after using another folder | The root `kanban-board.json` is refreshed from the live board, an existing root file is kept as `.bak`, and the confirm asks to remove only the old folder's three fixed snapshot files |
-| K-52 | Select a project that has a board but no `kanban-board.json` with auto-export on | The file is created after the debounce with only that project's board; selecting a project whose file exists does not overwrite it |
 | K-50 | Upgrade a v0.1.1 installation whose board has tasks from two projects | Each project shows only its own cards, columns, and tags; the old global file still loads only the current project on reload |
 | K-51 | Put a legacy whole-installation `kanban-board.json` in project A and reload | Only A's tasks are imported; the other project's cards stay out of A's board; the toast reports A's imported task count |
 | T-01 | **Tags** → add three tags with different colors in project A | The filter row and task dialog show them for A; project B keeps its own tags; cards show assigned tags |

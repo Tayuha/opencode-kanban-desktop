@@ -1,4 +1,4 @@
-import type { Board, BoardMap, Category, Prefs, Task, Tag } from "./types.ts"
+import type { Board, BoardMap, Category, Task, Tag } from "./types.ts"
 import { BOARD_VERSION, defaultBoard, normalizeBoard, sameBoard, tagsOf } from "./board.ts"
 import { normalizePath } from "./status.ts"
 
@@ -55,12 +55,6 @@ export function withBoard(map: BoardMap, key: string, board: Board): BoardMap {
   const current = map[key]
   if (current && sameBoard(current, board)) return map
   return { ...map, [key]: board }
-}
-
-/** The folder a project's snapshot is read from and written to. */
-export function boardDirectory(prefs: Pick<Prefs, "boardDirs">, key: string, fallback: string): string {
-  const override = prefs.boardDirs?.[key]?.trim()
-  return override || fallback
 }
 
 function projectSlice(board: Board, key: string, projectID?: string): Board {

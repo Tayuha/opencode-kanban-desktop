@@ -84,10 +84,6 @@ export type BoardWriteResult =
   | { ok: true; path: string; backupPath?: string }
   | { ok: false; code: "invalid" | "write_failed"; path: string; message: string }
 
-export type BoardRemoveResult =
-  | { ok: true; paths: string[] }
-  | { ok: false; code: "invalid" | "remove_failed"; paths: string[]; message: string }
-
 function targetPath(directory: string, target: BoardTarget): string {
   return join(directory, target === "backup" ? BOARD_BACKUP : BOARD_FILE)
 }
@@ -156,36 +152,4 @@ export async function writeBoardFile(
   }
 
   return { ok: true, path, backupPath }
-}
-
-/**
- * Removes only this plugin's three fixed snapshot files from a directory.
- * Used after the user changes or resets a project's board folder and confirms cleanup.
- */
-export async function removeBoardFiles(
-  directory: string,
-  signal?: AbortSignal,
-): Promise<BoardRemoveResult> {
-  if (!directory || !isAbsolute(directory)) {
-    return {
-      ok: false,
-      code: "invalid",
-      paths: [],
-      message: "The board directory must be an absolute path.",
-    }
-  }
-
-  const paths = [BOARD_FILE, BOARD_FILE_BAK, BOARD_BACKUP].map((name) => join(directory, name))
-  if (signal?.aborted) {
-    return { ok: false, code: "remove_failed", paths, message: "Cancelled." }
-  }
-
-  try {
-    for (const path of paths) {
-      await rm(path, { force: true })
-    }
-    return { ok: true, paths }
-  } catch (error) {
-    return { ok: false, code: "remove_failed", paths, message: messageOf(error) }
-  }
 }

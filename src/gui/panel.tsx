@@ -515,17 +515,6 @@ export function BoardWorkspace(props: WorkspaceProps) {
                 onClick={() => void reloadBoard()}
               />
             </ui.Tooltip>
-            <ui.Tooltip value={ctx.t("action.boardFolder")}>
-              <ui.IconButton
-                icon="folder"
-                label={ctx.t("action.boardFolder")}
-                size="small"
-                onClick={() => {
-                  const id = projectID()
-                  if (id) void props.services.chooseBoardFolder(props.session, id)
-                }}
-              />
-            </ui.Tooltip>
             <Show when={!props.dialog}>
               <ui.Tooltip value={ctx.t("command.board")}>
                 <ui.IconButton

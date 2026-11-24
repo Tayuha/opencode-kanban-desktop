@@ -99,7 +99,7 @@ type Task = {
   serverID?                    // omitted on legacy tasks
   branch; baseBranch?
   worktreePath?
-  directory?                   // existing folder; never removed by the plugin
+  directory?                   // legacy task folder; never removed by the plugin
   categoryID; position
   tagIDs?
   sessionID?
@@ -116,8 +116,8 @@ position/`createdAt` pair breaks ties.
 The board map is keyed by the canonical project folder, not by OpenCode's project id. Two project
 records for the same folder (for example `global` and a hashed id) therefore share one board and
 cannot leak cards into each other. `model/boards.ts` owns the keying, lookup, migration, project
-scoping, and optional board-folder map. A missing board is the normal default board with **Todo /
-In progress / Done** columns and no tags.
+scoping. A missing board is the normal default board with **Todo / In progress / Done** columns
+and no tags.
 
 Each project board normally stores its tags in `tags` and its columns in `categories`. The
 `tagsByProject` and `categoriesByProject` fields remain in the type and normalizer so a legacy
@@ -166,7 +166,6 @@ type Prefs = {
   initialPrompt: string
   lastProjectID?
   lastBoardKey?                // canonical folder key last shown in the panel
-  boardDirs?: Record<string, string>  // optional per-project board folders
 }
 ```
 
@@ -179,10 +178,10 @@ migration.
 | State | Owner | Persisted? |
 |---|---|---|
 | Every project's tasks, columns, tags, assignments, archive flags | GUI `Store.global` `boards` map | Yes, in Desktop plugin storage |
-| Preferences and board-folder overrides | GUI `Store.global` prefs | Yes, in Desktop plugin storage |
+| Preferences | GUI `Store.global` prefs | Yes, in Desktop plugin storage |
 | Live status, session titles, cost, todos, subagents | Live registry, derived from server data | No; recomputed |
 | Sessions, messages, worktrees, VCS status | OpenCode server | Yes, outside the plugin |
-| Each project's `kanban-board.json` and its backups | Project root or the chosen board folder, written only by explicit actions/RPC | Yes, as files |
+| Each project's `kanban-board.json` and its backups | Project root, written only by explicit actions/RPC | Yes, as files |
 | Tabs, notifications, clipboard, reveal | Desktop app | Outside the plugin |
 
 ## Lifecycle
@@ -246,9 +245,8 @@ own watch and local filters, but shares the per-project board map and preference
    changes, calls `vcs.get`, `vcs.base`, and `vcs.branch.list` through `listBranches`.
 2. If the directory is not a git repository, the worktree switch is disabled and
    `makeWorktree` is false.
-3. Validation checks the project, column, title-or-branch, git branch syntax, duplicate
-   branch labels in the same project, and that an existing folder is inside the project and not
-   inside a different OpenCode project. Auto-prompt also requires a prompt.
+3. Validation checks the project, column, title-or-branch, git branch syntax, and duplicate
+   branch labels in the same project. Auto-prompt also requires a prompt.
 4. With worktrees on:
    `client.worktree.create({ projectID, name: branchLabel, branch: baseRef })`. OpenCode 2.3.2
    runs `git worktree add --detach`; `branch` is the ref to detach at, `name` labels the directory,
@@ -348,7 +346,7 @@ prompt cache, todos, and cost.
 ### Export and reload
 
 **Auto-export** runs per project board. After one project's board changes settle for 1.5 seconds,
-the plugin serializes that board and calls `save({ directory: boardFolder, json })` silently. When
+the plugin serializes that board and calls `save({ directory: project.root, json })` silently. When
 a project with a board is selected and no file exists, the same path creates it; an existing file
 is only read as a baseline. Each project keeps its own debounce, destination, and last-written
 snapshot, so switching projects does not export the wrong board. It never runs while the preference
@@ -364,7 +362,7 @@ shows one conflict toast. A successful apply parses the file, scopes it to the p
 it, merges session bindings, replaces only that project's board, and invalidates live state. It
 does not auto-export the result back.
 
-Reload calls `load({ directory: boardFolder })` explicitly. Auto-export makes the live project
+Reload calls `load({ directory: project.root })` explicitly. Auto-export makes the live project
 board authoritative; an externally edited file is overwritten on the next board change unless it
 is reloaded or auto-reloaded first.
 
@@ -434,17 +432,15 @@ leaves the session bound and open and reports a toast.
 - **Columns are per project.** Each project board owns its set. A new board starts from **Todo /
   In progress / Done**. Tasks remain in their board, and a column from one project is never a valid
   target for another project's task.
-- **Board files are per project.** The default is `<projectRoot>/kanban-board.json`; the panel's
-  folder action stores an optional override per project. Changing or resetting the folder exports
-  the current board to the new folder, then offers to remove the old folder's snapshots. A reload
-  scopes the file to the project, so a legacy whole-installation snapshot cannot add another
-  project's cards.
+- **Board files are per project.** The file is `<projectRoot>/kanban-board.json`. A reload scopes
+  the file to the project, so a legacy whole-installation snapshot cannot add another project's
+  cards.
 - **Compact density is a reading mode.** It keeps the same board DOM and interactions but hides tags,
   branch/worktree lines, and card details, clamps cards to one line, and caps scroll-mode columns at
   220px. The toggle lives in the panel header, the `C` key, the palette, and settings.
-- **Existing folder is a location mode.** The task dialog accepts an absolute folder chosen with
-  `ctx.desktop.pick` or typed. It disables the worktree switch, runs sessions there, and
-  stores it in `directory` separately from a managed `worktreePath`.
+- **Folder selection is gone.** Tasks run in a worktree or the project root. Legacy tasks with a
+  stored folder still open there; the new-task dialog has no folder picker. This avoids a nested
+  OpenCode project silently switching the panel to another board.
 - **Detail replaces the board instead of splitting.** A split view in a 560px panel leaves two
   unusable halves. The detail view keeps a back control and the same keyboard flow.
 - **Drag and drop plus keyboard.** Mouse users drag; keyboard users use Shift+arrows and palette
@@ -498,19 +494,19 @@ leaves the session bound and open and reports a toast.
 
 ## Testing
 
-The documented v0.1.1 suite has 141 vitest cases:
+The documented v0.1.1 suite has 136 vitest cases:
 
 | File | Cases | Focus |
 |---|---:|---|
 | `model/board.test.ts` | 60 | defaults, create/update/move/archive/delete/undo, task directories, per-project columns and tags, server ids and claiming, normalization, duplicate branches/counts, colors, session merge, shape check, branch generation |
 | `model/status.test.ts` | 12 | path normalization, session rows, pinned vs discovery matching, existing-folder matching, descendants, live derivation, status/transition helpers |
 | `model/todo.test.ts` | 8 | todo normalization, newest tool call, metadata/text fallbacks, percentage |
-| `model/projects.test.ts` | 12 | names, sort/dedupe, same-folder ids, routed fallback, lookups, folder containment, nested projects |
-| `model/boards.test.ts` | 11 | project keys, lookup/write immutability, migration split, project scoping, board folders |
+| `model/projects.test.ts` | 10 | names, sort/dedupe, same-folder ids, routed fallback, lookups |
+| `model/boards.test.ts` | 10 | project keys, lookup/write immutability, migration split, project scoping |
 | `model/select.test.ts` | 7 | text/tag filters, server scope, column/archive selection, neighbours, status keys |
 | `data/actions.test.ts` | 2 | worktree payload: base ref, sanitized name, blank fallbacks |
 | `data/live.test.ts` | 8 | derived live state, server-scoped tasks, pinned-session hydration, archived pins, deleted-pin reporting, missing-pin isolation, running→idle callback, stale fallback with a fake client |
-| `server/board-file.test.ts` | 11 | read/write/remove, missing/invalid/oversized/aborted, `.bak`, separate backup |
+| `server/board-file.test.ts` | 9 | read/write, missing/invalid/oversized/aborted, `.bak`, separate backup |
 | `definition.test.ts` | 3 | store declaration, key copy, non-empty copy |
 | `format.test.ts` | 7 | cost, IDs, basenames, plurals, relative time, clock/diff |
 

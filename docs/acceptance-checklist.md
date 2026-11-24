@@ -8,7 +8,7 @@ The board file's exact behavior is in [`board-file.md`](board-file.md).
 
 - [ ] `npm ci` from a clean checkout
 - [ ] `npm run typecheck` exits 0
-- [ ] `npm test` passes every case (**141** at the time of writing; update the docs if the count changes)
+- [ ] `npm test` passes every case (**136** at the time of writing; update the docs if the count changes)
 - [ ] `npm run build` emits `dist/gui-experimental.cjs`
 - [ ] A second build is byte-identical (`cp dist/gui-experimental.cjs /tmp/a && npm run build && cmp /tmp/a dist/gui-experimental.cjs`)
 - [ ] The bundle requires only `effect`, `@opencode/plugin/gui`, `@opencode/plugin/rpc`, `solid-js`, and `solid-js/web`
@@ -64,14 +64,10 @@ The board file's exact behavior is in [`board-file.md`](board-file.md).
 ## Worktrees and sessions
 
 - [ ] Creating a task in a git project creates a worktree through the API
-- [ ] An existing-folder task runs its linked session in that folder and creates no worktree
-- [ ] The card and detail view show the existing folder
-- [ ] Deleting an existing-folder task never removes the folder
 - [ ] A generated worktree label has the `feature/word-word-NNN` shape; Generate produces another valid name
 - [ ] Creating a worktree task produces a detached worktree at the base ref; the plugin does not create or delete a git branch
 - [ ] Long switch and field descriptions wrap instead of clipping at the dialog edge
 - [ ] Choosing **Default branch** keeps its text visible and detaches the worktree at HEAD
-- [ ] An existing folder inside the project keeps the task on the same board; a nested OpenCode project folder is rejected
 - [ ] A linked session opens in the task directory by default with the prompt prefilled and bound immediately
 - [ ] Auto-prompt creates a session, sends the prompt, binds it, and opens its tab
 - [ ] A worktree creation failure leaves no task record and shows the server error
@@ -124,9 +120,6 @@ The board file's exact behavior is in [`board-file.md`](board-file.md).
 - [ ] Two OpenCode project records for the same folder appear once in the switcher; the routed id wins
 - [ ] Switching projects swaps the entire board, including that project's columns, tags, and archive; no cards leak between projects
 - [ ] The project switcher follows the routed session's project on open
-- [ ] Export writes only the selected project's board (tasks, tags, columns, archived cards) to its board folder
-- [ ] A project's board folder defaults to its root and can be changed with the folder action; the choice survives a restart
-- [ ] Changing or resetting the board folder writes the current board to the new folder and offers to remove only the old folder's fixed snapshot files
 - [ ] Selecting a project with a board but no board file creates its snapshot; selecting one with an existing file does not overwrite it
 - [ ] Export keeps an existing previous file as `kanban-board.json.bak`
 - [ ] Exporting into a git project may create an untracked/modified board file; the doc warns about it

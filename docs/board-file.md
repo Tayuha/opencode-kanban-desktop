@@ -13,18 +13,13 @@ keeps the selected project's file current after its board changes unless the pre
 
 ## Where the file lives
 
-- Default: `<projectRoot>/kanban-board.json`.
-- The folder icon in the panel header opens **Board file folder**. Choose **Project root** or a
-  folder with `ctx.desktop.pick`. The choice is stored per project in the preferences. Changing or
-  resetting the folder immediately writes the current board there (an existing file is kept as
-  `.bak`). After the new file is written, Desktop offers to remove the previous folder's
-  `kanban-board.json`, `.bak`, and `kanban-board.backup.json`; declining leaves them in place.
+- `<projectRoot>/kanban-board.json`. There is no folder picker; the project root is the only
+  destination.
 - A project's board is keyed by its canonical folder. Two OpenCode project records for the same
-  folder share one board and one default file.
-- Do not point several projects at the same folder. They would take turns overwriting one file.
+  folder share one board and one file.
 
-The board RPC writes only fixed filenames inside the folder the GUI supplies. It never accepts a
-custom filename or lists directories.
+The board RPC writes only fixed filenames inside the project root. It never accepts a custom
+filename or lists directories.
 
 ## What the file contains
 
@@ -116,8 +111,7 @@ after normalization regardless of the value in the file.
 
 The live boards live in Desktop plugin storage (`Store.global`) in the
 `plugin.nmdra.kanban-desktop.boards` state row. That row is a map from canonical project folder to
-one board. Preferences, including board-folder overrides, are in
-`plugin.nmdra.kanban-desktop.prefs`.
+one board. Preferences are in `plugin.nmdra.kanban-desktop.prefs`.
 
 v0.1.1 stored one `plugin.nmdra.kanban-desktop.board` with every project's tasks. On the first
 mount after upgrading, the plugin:
@@ -172,22 +166,19 @@ selecting a project that has a board but no file also creates its snapshot; an e
 never overwritten just by selecting the project. Both writes:
 
 1. Serialize that project's live board with two-space indentation and a trailing newline.
-2. Call `nmdra.kanban-desktop.board.save({ directory: boardFolder, json })`.
+2. Call `nmdra.kanban-desktop.board.save({ directory: projectRoot, json })`.
 3. If `kanban-board.json` already exists as a regular file, copy it to
    `kanban-board.json.bak` first.
 4. Write the new file atomically.
 
 Auto-export tracks and writes each changed project independently. It is silent on success. A
-failure shows one toast per distinct error. Manual export reports the file and backup paths and
-updates the folder used by later auto-exports.
+failure shows one toast per distinct error. Manual export reports the file and backup paths.
 
 Consequences:
 
 - The file contains **only the exported project's** tasks, columns, tags, and archive state.
 - `.bak` is the previous **file**, not a snapshot at the moment you exported. With auto-export it
   is the immediately previous auto-snapshot; a manual export also rotates it.
-- A board-folder override changes the destination for that project. The RPC still writes only the
-  fixed names into that folder.
 - Exporting to a git project's root creates an untracked or modified `kanban-board.json` in that
   project. The plugin does not add it to `.gitignore`; decide whether to commit, ignore, or delete
   it. It can also appear in that project's VCS status.
@@ -216,13 +207,13 @@ instead of claiming an update. Tasks for other project folders in the file are i
 
 **Reload board** (panel download icon or palette command) runs this pipeline:
 
-1. Resolve the selected project's folder and board folder.
+1. Resolve the selected project's root.
 2. If that project's board has at least one task (archived tasks count), ask for confirmation. If
    the board is empty, skip the confirmation and the backup.
 3. After confirmation, serialize that project's board and call `save` with `target: "backup"`. This
    writes `kanban-board.backup.json` and does not touch `kanban-board.json`. If this step fails,
    stop; the project's board is untouched.
-4. Call `load({ directory: boardFolder })` to read `kanban-board.json`.
+4. Call `load({ directory: projectRoot })` to read `kanban-board.json`.
 5. Parse the JSON and check `isBoardLike`.
 6. Normalize the file and scope it to this project folder (or, for a root-less legacy task, this
    project id). Tasks for other folders are ignored.
@@ -244,7 +235,7 @@ What is preserved:
 
 - every other project's board;
 - preferences (alignment, width, poll interval, open mode, notification/pill settings, default
-  prompt, board-folder overrides);
+  prompt);
 - a current session binding for an imported task with the same ID when the file omits
   `sessionID`;
 - worktrees, branches, and sessions on disk/server (the file only stores references).
@@ -256,8 +247,8 @@ What is **not** preserved or merged:
 - a task with a different `serverID` from the mounted server is not shown or live-updated, though it
   remains in the file; legacy tasks without one are claimed by the first server that opens the
   project;
-- a task with `directory` runs in that existing folder; the folder is never deleted and never
-  treated as a managed worktree;
+- a legacy task with `directory` runs in that existing folder; the folder is never deleted and
+  never treated as a managed worktree;
 - tag assignments that the file does not name are lost for that task;
 - live status is not stored in the file and is always recomputed from sessions.
 
@@ -346,15 +337,11 @@ The GUI calls the plugin's RPC through the local OpenCode server:
 - `nmdra.kanban-desktop.board.load({ directory })` returns `{ path, json }`.
 - `nmdra.kanban-desktop.board.save({ directory, json, target? })` returns `{ path, backupPath? }`.
   `target` is `"board"` (default) or `"backup"`.
-- `nmdra.kanban-desktop.board.remove({ directory })` removes only the three fixed snapshot files
-  and returns `{ paths }`. The GUI calls it only after the confirmation offered by a board-folder
-  change or reset.
 
 The RPC performs no authentication of its own beyond the local server's RPC surface. It trusts the
 absolute folder supplied by the caller and touches only the fixed filenames there. Any local client
-able to call the RPC could therefore write or remove those three filenames in another existing
-absolute folder. The plugin's own GUI passes the selected project's previous or current board
-folder.
+able to call the RPC could therefore write those three filenames in another existing absolute
+folder. The plugin's own GUI passes the selected project's root.
 
 ## Limits
 

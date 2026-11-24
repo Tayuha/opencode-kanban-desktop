@@ -12,11 +12,8 @@ Do not tag yet. Add v0.1.2 changes here until the release is closed; the package
   `plugin.nmdra.kanban-desktop.boards` state row. Switching projects swaps the whole board instead
   of showing or exporting another project's cards.
 - **Project-scoped board files.** Export, auto-export, reload, and auto-reload read and write only
-  the selected project's `kanban-board.json`. The file defaults to the project root, and the panel
-  folder action stores an optional per-project board folder. Selecting a project with a board but
-  no file creates its snapshot; an existing file is not overwritten just by selecting it.
-  Changing or resetting the board folder writes the current board to the new folder and leaves the
-  old folder's file in place.
+  the selected project's `kanban-board.json` at its project root. Selecting a project with a board
+  but no file creates its snapshot; an existing file is not overwritten just by selecting it.
 - **One-time migration.** The v0.1.1 global `board` row is split by each task's `projectRoot` into
   per-project boards, then reset. A legacy whole-installation snapshot is narrowed to the selected
   project on reload; tasks for other folders are ignored.
@@ -28,12 +25,12 @@ Do not tag yet. Add v0.1.2 changes here until the release is closed; the package
 - Worktree creation now matches OpenCode 2.3.2: it passes the base ref and a sanitized worktree
   name instead of a new branch. The API creates a detached worktree and never creates a git branch;
   the task's branch name is a label until you create the branch inside the worktree.
-- The new-task dialog now wraps switch descriptions instead of clipping them, keeps the “Default
-  branch” label visible, shows the project root as the existing-folder reference, and rejects
-  folders that belong to a different OpenCode project.
+- The new-task dialog now wraps switch descriptions instead of clipping them and keeps the
+  “Default branch” label visible. The task folder picker and the per-project board-folder
+  override were removed; tasks run in a worktree or the project root.
 - Detail labels no longer render literal `{{time}}` placeholders; the Changes empty copy no longer
   says “worktree” for tasks without one.
-- Added 11 board-map tests, 2 board-file removal tests, 2 worktree payload tests, and 2 project-containment tests; the suite now has 141 cases.
+- Added 10 board-map tests and 2 worktree payload tests; the suite now has 136 cases.
 
 ## v0.1.1 — 2026-11-22
 

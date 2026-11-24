@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest"
 import {
-  boardDirectory,
   boardForProject,
   boardIn,
   boardKeyFor,
@@ -11,7 +10,6 @@ import {
   withBoard,
 } from "./boards.ts"
 import {
-  DEFAULT_PREFS,
   addTag,
   createTask,
   defaultBoard,
@@ -74,16 +72,6 @@ describe("board lookup and writes", () => {
     expect(found?.key).toBe(ROOT)
     expect(found?.task.title).toBe("task_a")
     expect(findTaskIn({ [ROOT]: board }, "missing")).toBeUndefined()
-  })
-})
-
-describe("boardDirectory", () => {
-  it("uses the project root unless the user chose a folder", () => {
-    expect(boardDirectory(DEFAULT_PREFS, ROOT, "/fallback")).toBe("/fallback")
-    expect(boardDirectory({ ...DEFAULT_PREFS, boardDirs: { [ROOT]: "/boards/alpha" } }, ROOT, "/fallback")).toBe(
-      "/boards/alpha",
-    )
-    expect(boardDirectory({ ...DEFAULT_PREFS, boardDirs: { [ROOT]: "  " } }, ROOT, "/fallback")).toBe("/fallback")
   })
 })
 

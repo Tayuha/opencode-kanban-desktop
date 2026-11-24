@@ -19,7 +19,7 @@ import {
   validateBranch,
 } from "../model/board.ts"
 import { Field, SwitchRow } from "../components.tsx"
-import { findProject, insideFolder, nestedProjectFor } from "../model/projects.ts"
+import { findProject } from "../model/projects.ts"
 import type { BranchList } from "../data/actions.ts"
 
 type TaskDialogProps = {
@@ -64,7 +64,6 @@ export function TaskDialog(props: TaskDialogProps) {
   const [title, setTitle] = createSignal(props.task?.title ?? "")
   const [branch, setBranch] = createSignal(props.task?.branch ?? "")
   const [base, setBase] = createSignal(props.task?.baseBranch ?? "")
-  const [directory, setDirectory] = createSignal(props.task?.directory ?? "")
   const [categoryID, setCategoryID] = createSignal(props.task?.categoryID ?? initialCategory())
   const [notes, setNotes] = createSignal(props.task?.notes ?? "")
   const [tagIDs, setTagIDs] = createSignal<string[]>(props.task?.tagIDs ? [...props.task.tagIDs] : [])
@@ -81,9 +80,6 @@ export function TaskDialog(props: TaskDialogProps) {
   const project = () => findProject(props.projects, projectID())
   const currentBranch = () => branch().trim() || suggested
 
-  /** A nested OpenCode project inside this one would open a different board for the session. */
-  const nestedProject = (folder: string) => nestedProjectFor(props.projects, projectID(), folder)
-
   createEffect(
     on(
       projectID,
@@ -93,7 +89,6 @@ export function TaskDialog(props: TaskDialogProps) {
         const token = ++branchRequest
         setChecking(true)
         setBase("")
-        setDirectory("")
         void props.services
           .branches(props.session, row.root)
           .then((result) => {
@@ -138,34 +133,6 @@ export function TaskDialog(props: TaskDialogProps) {
     ...branches().branches.map((value) => ({ value, label: value })),
   ]
 
-  const pickDirectory = async () => {
-    if (busy()) return
-    try {
-      const [picked] = (await ctx.desktop?.pick({
-        directory: true,
-        title: ctx.t("task.field.directory.pick"),
-      })) ?? []
-      if (!picked) return
-      const row = project()
-      if (row && !insideFolder(row.root, picked)) {
-        setError(ctx.t("task.validation.directoryOutside"))
-        return
-      }
-      if (nestedProject(picked)) {
-        setError(ctx.t("task.validation.directoryProject"))
-        return
-      }
-      setDirectory(picked)
-      setMakeWorktree(false)
-      setBase("")
-      const info = await props.services.branches(props.session, picked).catch(() => undefined)
-      if (info?.current) setBranch(info.current)
-      else if (!branch().trim()) setBranch(generateBranch("existing"))
-    } catch (cause) {
-      setError(errorText(cause) || ctx.t("task.error.directory"))
-    }
-  }
-
   const validate = (): string | undefined => {
     const row = project()
     if (!row) return ctx.t("task.validation.project")
@@ -173,16 +140,6 @@ export function TaskDialog(props: TaskDialogProps) {
       return ctx.t("task.validation.category")
     }
     if (!title().trim() && !branch().trim()) return ctx.t("task.validation.title")
-    const folder = directory().trim()
-    if (folder && !folder.startsWith("/") && !folder.startsWith("\\\\") && !/^[a-zA-Z]:[\\/]/.test(folder)) {
-      return ctx.t("task.validation.directory")
-    }
-    if (folder && !insideFolder(row.root, folder)) {
-      return ctx.t("task.validation.directoryOutside")
-    }
-    if (folder && nestedProject(folder)) {
-      return ctx.t("task.validation.directoryProject")
-    }
     const value = currentBranch()
     const branchError = validateBranch(value)
     if (branchError) return ctx.t("task.validation.branch")
@@ -213,17 +170,6 @@ export function TaskDialog(props: TaskDialogProps) {
       setError(problem)
       return
     }
-    const folder = directory().trim()
-    if (folder) {
-      const exists = await props.session.server.client.file
-        .list({ location: { directory: folder } }, { signal: ctx.signal })
-        .then(() => true)
-        .catch(() => false)
-      if (!exists) {
-        setError(ctx.t("task.validation.directoryMissing"))
-        return
-      }
-    }
     const row = project()!
     setBusy(true)
     try {
@@ -234,11 +180,10 @@ export function TaskDialog(props: TaskDialogProps) {
         title: title().trim(),
         branch: currentBranch(),
         baseBranch: base().trim() || undefined,
-        directory: folder || undefined,
         categoryID: categoryID(),
         tagIDs: tagIDs(),
         notes: notes().trim() || undefined,
-        makeWorktree: branches().isRepo && makeWorktree() && !folder,
+        makeWorktree: branches().isRepo && makeWorktree(),
         openOnCreate: openOnCreate(),
         autoPrompt: autoPrompt(),
         prompt: prompt(),
@@ -293,33 +238,6 @@ export function TaskDialog(props: TaskDialogProps) {
             </Field>
 
             <Field
-              label={ctx.t("task.field.directory")}
-              hint={
-                directory().trim()
-                  ? `${ctx.t("task.field.directory.selected")} ${ctx.t("task.field.directory.board")}`
-                  : `${ctx.t("task.field.directory.hint")} ${ctx.t("task.field.directory.project", {
-                      path: project()?.root ?? "",
-                    })}`
-              }
-            >
-              <div class="kb-field-row">
-                <ui.TextInput
-                  label={ctx.t("task.field.directory")}
-                  value={directory()}
-                  placeholder={project()?.root ?? ctx.t("task.field.directory.placeholder")}
-                  onInput={(value) => {
-                    setDirectory(value)
-                    if (value.trim()) setMakeWorktree(false)
-                  }}
-                  size="normal"
-                />
-                <ui.Button variant="neutral" size="small" onClick={() => void pickDirectory()}>
-                  {ctx.t("task.field.directory.browse")}
-                </ui.Button>
-              </div>
-            </Field>
-
-            <Field
               label={ctx.t("task.field.branch")}
               hint={
                 branches().isRepo
@@ -343,7 +261,7 @@ export function TaskDialog(props: TaskDialogProps) {
               </div>
             </Field>
 
-            <Show when={makeWorktree() && branches().isRepo && !directory().trim()}>
+            <Show when={makeWorktree() && branches().isRepo}>
               <Field label={ctx.t("task.field.base")}>
                 <ui.Select
                   label={ctx.t("task.field.base")}
@@ -402,11 +320,6 @@ export function TaskDialog(props: TaskDialogProps) {
             <Field label={ctx.t("task.field.branch")} hint={ctx.t("task.branchLocked")}>
               <span class="kb-mono">{props.task?.branch}</span>
             </Field>
-            <Show when={props.task?.directory}>
-              <Field label={ctx.t("task.field.directory")} hint={ctx.t("task.field.directory.locked")}>
-                <span class="kb-mono">{props.task!.directory}</span>
-              </Field>
-            </Show>
           </Show>
 
           <Field label={ctx.t("task.field.notes")}>
@@ -427,17 +340,11 @@ export function TaskDialog(props: TaskDialogProps) {
               <ui.Switch
                 label={ctx.t("task.worktree")}
                 hideLabel
-                checked={makeWorktree() && !directory().trim()}
-                onChange={(checked) => {
-                  setMakeWorktree(checked)
-                  if (checked) setDirectory("")
-                }}
-                disabled={busy() || checking() || !branches().isRepo || !!directory().trim()}
+                checked={makeWorktree()}
+                onChange={setMakeWorktree}
+                disabled={busy() || checking() || !branches().isRepo}
               />
             </SwitchRow>
-            <Show when={directory().trim()}>
-              <span class="kb-field-hint">{ctx.t("task.field.directory.uses")}</span>
-            </Show>
             <Show when={checking()}>
               <span class="kb-field-hint">{ctx.t("task.worktree.checking")}</span>
             </Show>

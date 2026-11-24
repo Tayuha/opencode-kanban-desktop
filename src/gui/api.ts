@@ -24,7 +24,6 @@ export type CreateTaskArgs = {
   title: string
   branch: string
   baseBranch?: string
-  directory?: string
   categoryID: string
   notes?: string
   tagIDs?: string[]
@@ -75,8 +74,6 @@ export type KanbanServices = {
   reloadBoard(session: MountedSession, projectID: string): Promise<void>
   /** Writes the current board to `<project>/kanban-board.json`, keeping the previous file as .bak. */
   exportBoard(session: MountedSession, projectID: string): Promise<void>
-  /** Chooses the folder that holds this project's kanban-board.json. */
-  chooseBoardFolder(session: MountedSession, projectID: string): Promise<void>
   branches(session: MountedSession, root: string): Promise<BranchList>
   vcs(session: MountedSession, task: Task): Promise<VcsSummary | undefined>
   reveal(path: string): Promise<void>

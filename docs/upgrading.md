@@ -27,7 +27,7 @@ Current line:
 
 1. **Preflight**
    - `npm run typecheck`
-   - `npm test` (currently 141 cases)
+   - `npm test` (currently 136 cases)
    - `npm run build`, then build again and compare the bundles byte for byte
    - `npm audit --audit-level=high`
    - Run the affected manual cases in [`test-plan.md`](test-plan.md) and the release gates in
@@ -104,8 +104,8 @@ upgrade replaces code only.
 - **Major releases** must document export/backup and any required migration.
 - Before a risky upgrade, export each project board you care about and keep `kanban-board.json.bak`
   and a copy of `~/.config/ai.opencode.desktop/drafts.sqlite` with Desktop closed.
-- Auto-export and auto-reload mean the project-root (or chosen folder) `kanban-board.json` is also a
-  current snapshot; it is not the authoritative store.
+- Auto-export and auto-reload mean the project-root `kanban-board.json` is also a current snapshot;
+  it is not the authoritative store.
 
 `v0.1.0 → v0.1.1` requires no migration. Project-list deduplication is a UI fix; the duplicate
 project records in OpenCode's database remain but are hidden.

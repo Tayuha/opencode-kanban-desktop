@@ -46,7 +46,7 @@ npm run build
 
 - [ ] `npm ci` completes from the lockfile.
 - [ ] `npm run typecheck` exits 0.
-- [ ] `npm test` passes **141** cases. If the count changed, update README, design, test-plan, and
+- [ ] `npm test` passes **136** cases. If the count changed, update README, design, test-plan, and
       the acceptance checklist before signing.
 - [ ] `npm run build` emits `dist/gui-experimental.cjs`.
 - [ ] A second build is byte-identical:
@@ -94,8 +94,7 @@ Run the listed cases from [`test-plan.md`](test-plan.md). Tick an area only when
 
 ### Tasks, worktrees, sessions
 
-- [ ] K-05, K-05b, K-06, K-07, K-08 — create, project-subfolder existing folder, worktree, generated branch, validation.
-- [ ] K-16, K-16b, K-16c, K-17, K-18 — delete undo, existing-folder safety, path validation, worktree removal, force.
+- [ ] K-16, K-17, K-18 — delete undo, worktree removal, force confirmation.
 - [ ] K-20, K-20b, K-20c, K-20d — reuse, focus, new session, ask.
 - [ ] K-20e, K-20f, K-20g, K-20h, K-20i — link current/open, shared session, unlink, cross-project.
 - [ ] K-21, K-22, K-23, K-23b, K-23c, K-48 — prompt, existing session, manual discovery, pinned-session persistence, deleted-pin cleanup.
@@ -137,10 +136,6 @@ Run the listed cases from [`test-plan.md`](test-plan.md). Tick an area only when
       `kanban-board.json`, and reload to verify recovery.
 - [ ] K-46 — export from project A contains only A's cards; project B does not automatically
       receive a file.
-- [ ] K-49 — the board-folder action writes to the chosen folder and can be reset to the project
-      root; the old folder's file is left in place.
-- [ ] K-49b — resetting to the project root refreshes the root file and the toast names the old
-      folder.
 - [ ] K-52 — selecting a project with a board and no file creates its snapshot; an existing file
       is not overwritten just by selection.
 - [ ] K-50/K-51 — the v0.1.1 split preserves cards, and a legacy whole-installation file imports

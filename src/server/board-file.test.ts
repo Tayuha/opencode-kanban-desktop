@@ -8,7 +8,6 @@ import {
   BOARD_FILE_BAK,
   MAX_BOARD_BYTES,
   readBoardFile,
-  removeBoardFiles,
   writeBoardFile,
 } from "./board-file.ts"
 
@@ -114,34 +113,6 @@ describe("writeBoardFile", () => {
     expect(await writeBoardFile(path, "{}", "board", controller.signal)).toMatchObject({
       ok: false,
       code: "write_failed",
-    })
-  })
-})
-
-describe("removeBoardFiles", () => {
-  it("removes only the plugin's fixed snapshot files", async () => {
-    const path = await directory()
-    for (const name of [BOARD_FILE, BOARD_FILE_BAK, BOARD_BACKUP, "keep.txt"]) {
-      await writeFile(join(path, name), "{}")
-    }
-
-    const result = await removeBoardFiles(path)
-    expect(result).toMatchObject({ ok: true })
-    if (result.ok) expect(result.paths).toHaveLength(3)
-    await expect(readFile(join(path, BOARD_FILE))).rejects.toThrow()
-    await expect(readFile(join(path, BOARD_FILE_BAK))).rejects.toThrow()
-    await expect(readFile(join(path, BOARD_BACKUP))).rejects.toThrow()
-    expect(await readFile(join(path, "keep.txt"), "utf8")).toBe("{}")
-  })
-
-  it("rejects a relative directory and an aborted signal", async () => {
-    expect(await removeBoardFiles("relative")).toMatchObject({ ok: false, code: "invalid" })
-    const path = await directory()
-    const controller = new AbortController()
-    controller.abort()
-    expect(await removeBoardFiles(path, controller.signal)).toMatchObject({
-      ok: false,
-      code: "remove_failed",
     })
   })
 })

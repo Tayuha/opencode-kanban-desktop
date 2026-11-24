@@ -79,7 +79,7 @@ npm run build
 npm audit --audit-level=high
 ```
 
-- Current suite: **141 tests**.
+- Current suite: **136 tests**.
 - Build twice and compare byte-for-byte when touching the bundle:
   `cp dist/gui-experimental.cjs /tmp/a.cjs && npm run build && cmp /tmp/a.cjs dist/gui-experimental.cjs`
 - The bundle must require only `effect`, `@opencode/plugin/gui`, `@opencode/plugin/rpc`,
@@ -107,7 +107,7 @@ src/gui/style.ts             scoped CSS
 
 The `model/` layer must stay SDK-free and unit-tested. Keep GUI code out of it. Keep server and GUI
 parts decoupled; the server RPC may only read/write fixed board filenames under the supplied
-absolute board folder.
+absolute project root.
 
 ## Board data and agent edits
 
@@ -115,7 +115,7 @@ The authoritative board is Desktop plugin storage (`Store.global`), normally
 `~/.config/ai.opencode.desktop/drafts.sqlite` on Linux. `kanban-board.json` is a snapshot.
 
 - **While Desktop is running:** write board changes to the active project's `kanban-board.json` (or
-  call the `save` RPC with its board folder). Auto-reload polls the last selected project every two
+  call the `save` RPC with its project root). Auto-reload polls the last selected project every two
   seconds and applies the file when that project's live board is clean. Direct writes to
   `drafts.sqlite` are invisible to the in-memory store and can be overwritten.
 - **While Desktop is closed:** update plugin storage only if you are sure which installation and
@@ -126,15 +126,15 @@ The authoritative board is Desktop plugin storage (`Store.global`), normally
   conflict toast.
 - Export before major board-schema work. Keep `kanban-board.json.bak` and a closed-Desktop copy of
   `drafts.sqlite` for recovery.
-- Board files contain titles, notes, branches, folder paths, and session IDs. Treat them as
+- Board files contain titles, notes, branches, legacy folder paths, and session IDs. Treat them as
   sensitive.
-- Existing folders and worktrees: only plugin-created worktrees may be removed, with confirmation.
-  An existing `directory` is never removed; branches are never deleted.
+- New tasks run in a worktree or the project root. Legacy tasks with a stored `directory` keep
+  using it, but the new-task dialog has no folder picker. Only plugin-created worktrees may be
+  removed, with confirmation; a legacy `directory` is never removed; branches are never deleted.
 - Boards are stored one per canonical project folder in the `boards` store. Exports and reloads are
   project-scoped: a file holds only that project's cards, columns, tags, and archive state. The
   legacy global `board` store is read once during migration and then kept empty.
-- A project's board file defaults to its root. `prefs.boardDirs`, keyed by the same project key,
-  stores an optional override chosen with the panel's folder action.
+- Each project's board file is `<projectRoot>/kanban-board.json`.
 
 ## Upgrade and release rules
 
@@ -172,8 +172,7 @@ restart. Never rewrite a released tag. The full runbook is [`docs/upgrading.md`]
   existing ref, and the API never creates a git branch. The plugin must not pretend otherwise.
 - No deleting sessions; no removing worktrees without user confirmation; never delete branches.
 - The board RPC reads and writes only `kanban-board.json`, `kanban-board.json.bak`, and
-  `kanban-board.backup.json`; its `remove` method removes only those three fixed files after a
-  folder-cleanup confirmation.
+  `kanban-board.backup.json` inside the project root.
 - Keep React/Solid style, naming, and existing component patterns.
 - Do not edit `node_modules`, `dist` by hand, or released tags. Rebuild `dist` instead.
 - Do not mark a verification card Done without the user confirming the Desktop pass.
