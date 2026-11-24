@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased (v0.1.3)
+
+Do not tag yet. The package version stays `0.1.2` until this release is closed.
+
+- Boards now adopt the current OpenCode project ID and canonical root for their folder when the
+  project is opened. Duplicate project records no longer hide existing cards while leaving the
+  board's columns and tags visible.
+- Added 2 board tests; the suite now has 138 cases.
+- README screenshots remain queued for this release.
+
 ## v0.1.2 — 2026-11-24
 
 Feature patch over v0.1.1. The board store migrates once; back up `drafts.sqlite` and export the

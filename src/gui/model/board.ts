@@ -295,6 +295,21 @@ export function createTask(board: Board, input: CreateTaskInput): Board {
   return { ...board, tasks: [...board.tasks, task] }
 }
 
+/**
+ * A per-project board must use the project id OpenCode currently routes to that folder.
+ * Duplicate project records can otherwise hide every card while leaving columns and tags visible.
+ */
+export function adoptProject(board: Board, projectID: string, projectRoot: string): Board {
+  if (!projectID || !projectRoot) return board
+  let changed = false
+  const tasks = board.tasks.map((task) => {
+    if (task.projectID === projectID && task.projectRoot === projectRoot) return task
+    changed = true
+    return { ...task, projectID, projectRoot }
+  })
+  return changed ? { ...board, tasks } : board
+}
+
 export type UpdateTaskPatch = {
   title?: string
   notes?: string

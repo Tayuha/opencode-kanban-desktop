@@ -9,6 +9,7 @@ import type { KanbanServices } from "./api.ts"
 import type { LiveSnapshot } from "./data/live.ts"
 import type { Task } from "./model/types.ts"
 import {
+  adoptProject,
   categories,
   claimTask,
   hasManagedWorktree,
@@ -107,6 +108,18 @@ export function BoardWorkspace(props: WorkspaceProps) {
       }
     }),
   )
+
+  // Duplicate OpenCode project records for one folder must not hide the board's cards.
+  createEffect(() => {
+    const id = projectID()
+    const root = boardRoot()
+    if (!id || !root) return
+    const current = board()
+    const next = adoptProject(current, id, root)
+    if (next === current) return
+    saveBoard(next)
+    props.services.live.invalidate(props.session.server.id, id)
+  })
 
   // Legacy tasks predate the server id; claim every one whose project this server knows about.
   createEffect(() => {

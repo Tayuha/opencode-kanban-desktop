@@ -115,8 +115,9 @@ position/`createdAt` pair breaks ties.
 
 The board map is keyed by the canonical project folder, not by OpenCode's project id. Two project
 records for the same folder (for example `global` and a hashed id) therefore share one board and
-cannot leak cards into each other. `model/boards.ts` owns the keying, lookup, migration, project
-scoping. A missing board is the normal default board with **Todo / In progress / Done** columns
+cannot leak cards into each other. When a board is opened, `adoptProject` rewrites its tasks to the
+current project id and canonical root, so duplicate records cannot hide the cards behind the
+project-id filter. `model/boards.ts` owns the keying, lookup, migration, and project scoping. A missing board is the normal default board with **Todo / In progress / Done** columns
 and no tags.
 
 Each project board normally stores its tags in `tags` and its columns in `categories`. The
@@ -494,11 +495,11 @@ leaves the session bound and open and reports a toast.
 
 ## Testing
 
-The documented v0.1.2 suite has 136 vitest cases:
+The current v0.1.3 development suite has 138 vitest cases (v0.1.2 shipped with 136):
 
 | File | Cases | Focus |
 |---|---:|---|
-| `model/board.test.ts` | 60 | defaults, create/update/move/archive/delete/undo, task directories, per-project columns and tags, server ids and claiming, normalization, duplicate branches/counts, colors, session merge, shape check, branch generation |
+| `model/board.test.ts` | 62 | defaults, create/update/move/archive/delete/undo, task directories, per-project columns and tags, server ids and claiming, normalization, duplicate branches/counts, colors, session merge, shape check, branch generation |
 | `model/status.test.ts` | 12 | path normalization, session rows, pinned vs discovery matching, existing-folder matching, descendants, live derivation, status/transition helpers |
 | `model/todo.test.ts` | 8 | todo normalization, newest tool call, metadata/text fallbacks, percentage |
 | `model/projects.test.ts` | 10 | names, sort/dedupe, same-folder ids, routed fallback, lookups |

@@ -8,7 +8,7 @@ The board file's exact behavior is in [`board-file.md`](board-file.md).
 
 - [ ] `npm ci` from a clean checkout
 - [ ] `npm run typecheck` exits 0
-- [ ] `npm test` passes every case (**136** at the time of writing; update the docs if the count changes)
+- [ ] `npm test` passes every case (**138** at the time of writing; update the docs if the count changes)
 - [ ] `npm run build` emits `dist/gui-experimental.cjs`
 - [ ] A second build is byte-identical (`cp dist/gui-experimental.cjs /tmp/a && npm run build && cmp /tmp/a dist/gui-experimental.cjs`)
 - [ ] The bundle requires only `effect`, `@opencode/plugin/gui`, `@opencode/plugin/rpc`, `solid-js`, and `solid-js/web`
@@ -118,6 +118,7 @@ The board file's exact behavior is in [`board-file.md`](board-file.md).
 - [ ] New tasks record the mounted server id; legacy tasks are claimed when their project opens
 - [ ] The board, archive, pill, and live status do not mix tasks from another server with the same project id
 - [ ] Two OpenCode project records for the same folder appear once in the switcher; the routed id wins
+- [ ] When a board's tasks carry an old project id for the same folder, opening the project adopts the current id and shows the cards
 - [ ] Switching projects swaps the entire board, including that project's columns, tags, and archive; no cards leak between projects
 - [ ] The project switcher follows the routed session's project on open
 - [ ] Selecting a project with a board but no board file creates its snapshot; selecting one with an existing file does not overwrite it

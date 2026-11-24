@@ -79,7 +79,7 @@ npm run build
 npm audit --audit-level=high
 ```
 
-- Current suite: **136 tests**.
+- Current suite: **138 tests**.
 - Build twice and compare byte-for-byte when touching the bundle:
   `cp dist/gui-experimental.cjs /tmp/a.cjs && npm run build && cmp /tmp/a.cjs dist/gui-experimental.cjs`
 - The bundle must require only `effect`, `@opencode/plugin/gui`, `@opencode/plugin/rpc`,
@@ -182,6 +182,7 @@ restart. Never rewrite a released tag. The full runbook is [`docs/upgrading.md`]
 
 - **v0.1.2** — released. Per-project boards/files, the one-time v0.1.1 split, the canonical
   no-change fix, and the worktree/session flow were verified in Desktop.
-- **v0.1.3** — open for README screenshots and any follow-ups.
+- **v0.1.3** — open for README screenshots and the automatic project-ID adoption for duplicate
+  OpenCode project records.
 - Still open for a full release: screenshots/docs completion, fresh-install smoke test, custom
   icons when the SDK exposes them, and macOS/Windows testing.

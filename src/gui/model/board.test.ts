@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
   addCategory,
+  adoptProject,
   addTag,
   archiveTask,
   archivedTasks,
@@ -118,6 +119,28 @@ describe("task locations", () => {
     expect(board.tasks[0]!.directory).toBe("/existing/folder")
     expect(board.tasks[0]!.worktreePath).toBeUndefined()
     expect(normalizeBoard(board)).toEqual(board)
+  })
+})
+
+describe("adoptProject", () => {
+  it("rewrites the project id and root without changing the card", () => {
+    const board = createTask(
+      defaultBoard(),
+      input({ id: "task_a", projectID: "old_project", projectRoot: "/old/root" }),
+    )
+    const next = adoptProject(board, "current_project", "/current/root")
+    expect(next.tasks[0]).toMatchObject({
+      id: "task_a",
+      title: "Ship the board",
+      projectID: "current_project",
+      projectRoot: "/current/root",
+    })
+    expect(board.tasks[0]!.projectID).toBe("old_project")
+  })
+
+  it("returns the same board when it already uses the current project", () => {
+    const board = createTask(defaultBoard(), input({ id: "task_a" }))
+    expect(adoptProject(board, PROJECT, ROOT)).toBe(board)
   })
 })
 

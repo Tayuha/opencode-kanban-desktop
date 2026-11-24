@@ -3,7 +3,7 @@
 Two layers: automated unit tests for everything that does not need a GUI, and a manual Desktop
 plan for the contributions and API calls that only the app can exercise.
 
-The documented v0.1.2 suite has **136 cases**. It covers the pure model, the live registry with a
+The current v0.1.3 development suite has **138 cases** (v0.1.2 shipped with 136). It covers the pure model, the live registry with a
 fake client, the board-file server code, the store definition, and formatting. It cannot cover
 Desktop's event timing, tabs, dialogs, notifications, clipboard, or worktree API.
 
@@ -28,7 +28,7 @@ byte-identical and the bundle should require only the five shared modules.
 - resolves a root-less migrated board by project id
 - writes board maps immutably and finds tasks across boards
 
-### `model/board.test.ts` — 60 cases
+### `model/board.test.ts` — 62 cases
 
 - default board seeds Todo / In progress / Done
 - positions are per project and column
@@ -43,6 +43,8 @@ byte-identical and the bundle should require only the five shared modules.
 - update title/notes; blank title ignored
 - category change moves the task
 - tags and a category move apply together
+- adopts the current project id and root for a per-project board
+- leaves an already-adopted board unchanged
 - bind a session (and merge/override bindings from a file)
 - archive, list, and restore
 - delete renumbers the column
@@ -262,6 +264,7 @@ cases.
 | K-47 | With an empty board, press reload with a valid file | No confirmation and no new `kanban-board.backup.json`; the file loads |
 | K-48 | Delete a task's pinned session outside the board, then refresh | The pin is cleared after the server confirms it is missing; a toast explains; the card shows no session and **Unlink** disappears; Link/New session can attach another |
 | K-50 | Upgrade a v0.1.1 installation whose board has tasks from two projects | Each project shows only its own cards, columns, and tags; the old global file still loads only the current project on reload |
+| K-53 | Open a project whose board tasks carry an old project ID because OpenCode has duplicate records for the folder | The cards appear with their tags and columns; the board adopts the current project ID and auto-exports the corrected board |
 | K-51 | Put a legacy whole-installation `kanban-board.json` in project A and reload | Only A's tasks are imported; the other project's cards stay out of A's board; the toast reports A's imported task count |
 | T-01 | **Tags** → add three tags with different colors in project A | The filter row and task dialog show them for A; project B keeps its own tags; cards show assigned tags |
 | T-02 | Assign tags in the task dialog, then save | Card shows up to 3 tags; detail and archive show all |

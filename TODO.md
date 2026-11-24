@@ -18,11 +18,12 @@ board; this file is the durable release view. The gate to run is
 > canonical no-change fix, and the detached-worktree/delete-choice fixes. See
 > [`CHANGELOG.md`](CHANGELOG.md).
 >
-> **v0.1.3 is open** for the README screenshots and any follow-ups.
+> **v0.1.3 is open** for the README screenshots, automatic project-ID adoption when OpenCode has
+> duplicate project records, and any follow-ups.
 
 Implemented and unit-tested:
 
-- One CommonJS GUI bundle; 136 tests; typecheck clean; deterministic build
+- One CommonJS GUI bundle; 138 tests; typecheck clean; deterministic build
 - Server part and board file RPC (load and save) with atomic writes
 - Board, columns, archive, search, keyboard and drag operations
 - Git worktrees and sessions through the OpenCode API
@@ -96,11 +97,11 @@ Tick every item before tagging a release. Each maps to a card on the board.
 
 ## Done
 
-Implemented and covered by the 136 automated tests:
+Implemented and covered by the 138 automated tests:
 
 - [x] Bundle builds as one CommonJS file (`dist/gui-experimental.cjs`)
 - [x] `npm run typecheck` is clean
-- [x] `npm test` passes 136 cases
+- [x] `npm test` passes 138 cases
 - [x] Bundle requires only shared modules (`effect`, GUI, rpc, solid-js, solid-js/web)
 - [x] Server part loads; plugin id is `nmdra.kanban-desktop`
 - [x] Board file RPC (load/save), Export board, Reload board, and pre-reload backup
