@@ -182,7 +182,7 @@ restart. Never rewrite a released tag. The full runbook is [`docs/upgrading.md`]
 
 - **v0.1.2** — released. Per-project boards/files, the one-time v0.1.1 split, the canonical
   no-change fix, and the worktree/session flow were verified in Desktop.
-- **v0.1.3** — open for README screenshots and the automatic project-ID adoption for duplicate
-  OpenCode project records.
+- **v0.1.3** — open for README screenshots, automatic project-ID adoption for duplicate
+  OpenCode project records, and hiding the empty Todos section.
 - Still open for a full release: screenshots/docs completion, fresh-install smoke test, custom
   icons when the SDK exposes them, and macOS/Windows testing.

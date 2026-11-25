@@ -95,7 +95,7 @@ The board file's exact behavior is in [`board-file.md`](board-file.md).
 ## Live state
 
 - [ ] Running and idle update within the poll interval or on events
-- [ ] Todo progress appears when the todo tool was used and is absent otherwise
+- [ ] Todo progress appears when the todo tool was used; the Todos section is hidden otherwise
 - [ ] Subagents show status, cost, and todo counts
 - [ ] Changes show files, additions/deletions, totals, and the base branch; the file list is capped at 60
 - [ ] A failed read marks the board stale and keeps the last cards

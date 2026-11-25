@@ -19,7 +19,7 @@ board; this file is the durable release view. The gate to run is
 > [`CHANGELOG.md`](CHANGELOG.md).
 >
 > **v0.1.3 is open** for the README screenshots, automatic project-ID adoption when OpenCode has
-> duplicate project records, and any follow-ups.
+> duplicate project records, hiding the empty Todos section, and any follow-ups.
 
 Implemented and unit-tested:
 

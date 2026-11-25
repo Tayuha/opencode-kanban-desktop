@@ -270,7 +270,6 @@ export const definition = Plugin.define({
       "detail.cost": "Cost",
       "detail.sessionID": "Session ID",
       "detail.todos": "Todos",
-      "detail.todos.empty": "No todo list has been written in this session.",
       "detail.todos.progress": "{{done}} of {{total}} done",
       "detail.subagents": "Subagents",
       "detail.subagents.empty": "No subagents have run for this task.",

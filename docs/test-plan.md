@@ -265,6 +265,7 @@ cases.
 | K-48 | Delete a task's pinned session outside the board, then refresh | The pin is cleared after the server confirms it is missing; a toast explains; the card shows no session and **Unlink** disappears; Link/New session can attach another |
 | K-50 | Upgrade a v0.1.1 installation whose board has tasks from two projects | Each project shows only its own cards, columns, and tags; the old global file still loads only the current project on reload |
 | K-53 | Open a project whose board tasks carry an old project ID because OpenCode has duplicate records for the folder | The cards appear with their tags and columns; the board adopts the current project ID and auto-exports the corrected board |
+| K-54 | Open Details on a session whose model has no todo tool | The Todos section is absent; status, worktree, notes, and changes remain visible |
 | K-51 | Put a legacy whole-installation `kanban-board.json` in project A and reload | Only A's tasks are imported; the other project's cards stay out of A's board; the toast reports A's imported task count |
 | T-01 | **Tags** → add three tags with different colors in project A | The filter row and task dialog show them for A; project B keeps its own tags; cards show assigned tags |
 | T-02 | Assign tags in the task dialog, then save | Card shows up to 3 tags; detail and archive show all |

@@ -8,6 +8,7 @@ Do not tag yet. The package version stays `0.1.2` until this release is closed.
   project is opened. Duplicate project records no longer hide existing cards while leaving the
   board's columns and tags visible.
 - Added 2 board tests; the suite now has 138 cases.
+- The detail view hides the Todos section when the session has no todo list, instead of showing an empty placeholder.
 - README screenshots remain queued for this release.
 
 ## v0.1.2 — 2026-11-24

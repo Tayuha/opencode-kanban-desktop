@@ -261,7 +261,7 @@ the task's root session; they appear as descendants in the detail view.
   configurable safety poll. A failed read keeps the last good snapshot and marks it stale; the
   panel shows a Retry action.
 - **Todos** come from the newest completed todo tool call in the session transcript. They are
-  shown on cards and in the detail view; when no todo tool was used, progress is simply absent.
+  shown on cards and in the detail view; when no todo tool was used, the Todos section is hidden.
 - **Subagents** are the descendants of the task's root session, with their own status, cost, and
   todo count when available.
 - **Changes** in the detail view read VCS status for the task's worktree or project root, show

@@ -35,7 +35,7 @@ Required files, saved in this folder:
 - Show:
   - Project, Branch, Base, Worktree
   - Status and cost
-  - Todos section, with a real todo list if possible
+  - Todos section only if the session actually has a todo list; otherwise it is hidden
   - Changes section
 - Confirm the labels read **Created** and **Updated**, not literal `{{time}}`.
 - Confirm the Changes empty copy reads **No uncommitted changes.** when nothing is changed.

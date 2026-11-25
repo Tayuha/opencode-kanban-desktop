@@ -228,16 +228,14 @@ export function DetailView(props: DetailProps) {
             </div>
           </Show>
 
-          <div class="kb-section">
-            <div class="kb-section-head">
-              <span class="kb-section-title">{ctx.t("detail.todos")}</span>
-              <Show when={props.live?.todos && props.live.todos.total > 0}>
+          <Show when={props.live?.todos && props.live.todos.total > 0}>
+            <div class="kb-section">
+              <div class="kb-section-head">
+                <span class="kb-section-title">{ctx.t("detail.todos")}</span>
                 <span class="kb-section-detail">
                   {ctx.t("detail.todos.progress", { done: props.live!.todos!.done, total: props.live!.todos!.total })}
                 </span>
-              </Show>
-            </div>
-            <Show when={props.live?.todos && props.live.todos.total > 0} fallback={<span class="kb-note">{ctx.t("detail.todos.empty")}</span>}>
+              </div>
               <Progress todos={props.live?.todos} showLabel={false} />
               <div class="kb-list">
                 <For each={props.live?.todos?.items ?? []}>
@@ -253,8 +251,8 @@ export function DetailView(props: DetailProps) {
                   )}
                 </For>
               </div>
-            </Show>
-          </div>
+            </div>
+          </Show>
 
           <div class="kb-section">
             <div class="kb-section-head">
