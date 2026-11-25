@@ -14,6 +14,24 @@ OpenCode Desktop's native project, worktree, session, tab, dialog, and notificat
 and installs from this checkout; it is not published to npm. The documented v0.1.2 baseline passes
 `typecheck`, 136 unit tests, and a deterministic single-file GUI build.
 
+## Screenshots
+
+![Kanban board with four columns, cards, tags, and counts](assets/board.png)
+
+*The board: per-project columns, cards, tags, status dots, and counts.*
+
+![Task details with a worktree, linked session, notes, tags, and uncommitted changes](assets/detail.png)
+
+*Task details: a linked session, worktree, notes, tags, and uncommitted changes.*
+
+<img src="assets/task-dialog.png" alt="New task dialog with the worktree, session, and prompt controls" width="520">
+
+*New task: branch, base, column, tags, notes, and the worktree/open/prompt controls.*
+
+![Composer pill showing one running task](assets/composer-pill.png)
+
+*The composer pill while a task is running.*
+
 ## Requirements
 
 - **OpenCode Desktop 2.3.2.** The GUI plugin API is experimental and version-coupled. The package
