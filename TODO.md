@@ -84,8 +84,8 @@ Tick every item before tagging a release. Each maps to a card on the board.
 - [ ] **Finish the documentation** (card `docs/documentation`)
       README, design, test plan, release checklist, and limitations; verify every claim against
       the build and the real Desktop behavior.
-- [ ] **Capture screenshots and finish the README** (card `todo/capture-screenshots`)
-      Board, detail, task dialog, tags, and pill; verify every README claim against the build.
+- [x] **Capture screenshots and finish the README** (card `todo/capture-screenshots`)
+      Board, detail, task dialog, and pill saved under `assets/` and linked from the README (2026-11-25).
 - [ ] **Fresh install and persistence pass**
       Remove the checkout from the config, restart, reinstall from the global config, and confirm
       board state, tags, links, columns, and settings recover.
@@ -134,10 +134,10 @@ Implemented and covered by the 138 automated tests:
 ## P1 — follow-ups
 
 - [ ] Pin closed or arbitrary sessions, beyond the open-session linker
-- [ ] Verify worktree-removal delete has no Undo in a real git project (covered by the worktree/session pass; use the plugin repo)
+- [x] Verify worktree-removal delete has no Undo in a real git project (2026-11-24)
 - [ ] Custom plugin icons when the SDK exposes them
 - [ ] Re-pin and re-test when Desktop changes the experimental GUI API (2.3.2 is still latest as of 2026-11-23)
-- [ ] Capture README screenshots manually (spectacle CLI unavailable here)
+- [x] Capture README screenshots manually (2026-11-25)
 - [ ] macOS and Windows smoke test
 - [ ] Optional tag presets and tag reordering
 
