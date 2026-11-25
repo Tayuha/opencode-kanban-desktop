@@ -1,6 +1,6 @@
-# Release checklist — v0.1.2
+# Release checklist — v0.1.3
 
-> v0.1.2 is a feature patch over v0.1.1 with a one-time board split. The older gates that remain open are still listed below.
+> v0.1.3 is a patch over v0.1.2 with no board data migration. The older gates that remain open are still listed below.
 
 The ordered runbook for shipping `opencode-kanban-desktop`. The detailed test cases live in
 [`test-plan.md`](test-plan.md); the acceptance matrix lives in
@@ -9,7 +9,7 @@ The ordered runbook for shipping `opencode-kanban-desktop`. The detailed test ca
 
 ## Scope
 
-- **Release type:** local/private v0.1.2 feature patch over v0.1.1. The package is `private: true` and installs from a
+- **Release type:** local/private v0.1.3 patch over v0.1.2. The package is `private: true` and installs from a
   checkout through the global `opencode.json`. Publishing to npm is out of scope.
 - **Target:** OpenCode Desktop **2.3.2**, pinned in `package.json`.
 - **Platform exercised:** Linux. macOS and Windows remain follow-ups.
@@ -21,7 +21,7 @@ The ordered runbook for shipping `opencode-kanban-desktop`. The detailed test ca
 ## 0. Freeze
 
 - [ ] Freeze `src`, `dist`, and docs for the release.
-- [ ] Confirm `package.json` version is `0.1.2` and `private: true`.
+- [ ] Confirm `package.json` version is `0.1.3` and `private: true`.
 - [ ] Record the commit or tag in the sign-off table below.
 - [ ] Back up Desktop's plugin storage:
       `sqlite3 ~/.config/ai.opencode.desktop/drafts.sqlite ".backup '/tmp/kanban-drafts.sqlite'"`
@@ -46,7 +46,7 @@ npm run build
 
 - [ ] `npm ci` completes from the lockfile.
 - [ ] `npm run typecheck` exits 0.
-- [ ] `npm test` passes **136** cases. If the count changed, update README, design, test-plan, and
+- [ ] `npm test` passes **138** cases. If the count changed, update README, design, test-plan, and
       the acceptance checklist before signing.
 - [ ] `npm run build` emits `dist/gui-experimental.cjs`.
 - [ ] A second build is byte-identical:
@@ -177,7 +177,7 @@ Run the listed cases from [`test-plan.md`](test-plan.md). Tick an area only when
 ## 5. Release mechanics
 
 - [ ] Commit `src`, `dist`, docs, `package.json`, and the lockfile in one release commit.
-- [x] Tag the commit `v0.1.2`.
+- [x] Tag the commit `v0.1.3`.
 - [ ] Reinstall from the tag in a disposable profile or directory and smoke-test the panel.
 - [ ] Confirm **Settings → Extensions → Plugins** still lists the plugin after the fresh install.
 - [ ] Write release notes: features, fixes, known limitations, Desktop version, the per-project board

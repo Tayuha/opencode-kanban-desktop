@@ -495,7 +495,7 @@ leaves the session bound and open and reports a toast.
 
 ## Testing
 
-The current v0.1.3 development suite has 138 vitest cases (v0.1.2 shipped with 136):
+The v0.1.3 suite has 138 vitest cases:
 
 | File | Cases | Focus |
 |---|---:|---|

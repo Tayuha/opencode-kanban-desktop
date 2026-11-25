@@ -8,7 +8,7 @@ board; this file is the durable release view. The gate to run is
 - **Target:** local/private v0.1.x on OpenCode Desktop **2.3.2**
 - **Upgrade plan:** [`docs/upgrading.md`](docs/upgrading.md)
 - **Platform exercised:** Linux
-- **Last updated:** 2026-11-24
+- **Last updated:** 2026-11-25
 
 ## Current state
 
@@ -18,8 +18,11 @@ board; this file is the durable release view. The gate to run is
 > canonical no-change fix, and the detached-worktree/delete-choice fixes. See
 > [`CHANGELOG.md`](CHANGELOG.md).
 >
-> **v0.1.3 is open** for the README screenshots, automatic project-ID adoption when OpenCode has
-> duplicate project records, hiding the empty Todos section, and any follow-ups.
+> **v0.1.3 is released** (2026-11-25): automatic project-ID adoption for duplicate OpenCode
+> records, hidden empty Todos section, and README screenshots. See [`CHANGELOG.md`](CHANGELOG.md).
+>
+> **v0.1.4 is open** for the fresh-install smoke test, custom icons when the SDK exposes them, and
+> macOS/Windows verification.
 
 Implemented and unit-tested:
 
@@ -90,7 +93,7 @@ Tick every item before tagging a release. Each maps to a card on the board.
       Remove the checkout from the config, restart, reinstall from the global config, and confirm
       board state, tags, links, columns, and settings recover.
 - [x] **Commit and push the plugin** (card `chore/git-upload`)
-      Repository initialized; `main`, `v0.1.0`, `v0.1.1`, and `v0.1.2` pushed to
+      Repository initialized; `main`, `v0.1.0`, `v0.1.1`, `v0.1.2`, and `v0.1.3` pushed to
       `github.com:Tayuha/opencode-kanban-desktop` (SSH). The remaining release gates still apply.
 - [ ] **Run and sign `docs/release-checklist.md`**
       No unchecked P0 without a written waiver.
@@ -130,6 +133,7 @@ Implemented and covered by the 138 automated tests:
 - [x] Per-project boards and project-scoped board files implemented; 136 tests pass (2026-11-23)
 - [x] Per-project board split and project switching verified in Desktop (2026-11-24)
 - [x] v0.1.2 release closed, version bumped, changelog finalized, tag created (2026-11-24)
+- [x] v0.1.3 release closed, version bumped, changelog finalized, tag created (2026-11-25)
 
 ## P1 — follow-ups
 

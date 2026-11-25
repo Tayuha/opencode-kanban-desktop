@@ -3,7 +3,7 @@
 Two layers: automated unit tests for everything that does not need a GUI, and a manual Desktop
 plan for the contributions and API calls that only the app can exercise.
 
-The current v0.1.3 development suite has **138 cases** (v0.1.2 shipped with 136). It covers the pure model, the live registry with a
+The v0.1.3 suite has **138 cases**. It covers the pure model, the live registry with a
 fake client, the board-file server code, the store definition, and formatting. It cannot cover
 Desktop's event timing, tabs, dialogs, notifications, clipboard, or worktree API.
 

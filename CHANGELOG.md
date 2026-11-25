@@ -1,15 +1,25 @@
 # Changelog
 
-## Unreleased (v0.1.3)
+## v0.1.3 — 2026-11-25
 
-Do not tag yet. The package version stays `0.1.2` until this release is closed.
+Patch release over v0.1.2. No board data migration is required.
+
+### Fixed
 
 - Boards now adopt the current OpenCode project ID and canonical root for their folder when the
   project is opened. Duplicate project records no longer hide existing cards while leaving the
   board's columns and tags visible.
+- The detail view hides the Todos section when the session has no todo list, instead of showing an
+  empty placeholder.
+
+### Documentation
+
+- Added the README screenshots: board, task details, new-task dialog, and composer pill. They are
+  stored under `assets/` and linked from the README.
+
+### Tests
+
 - Added 2 board tests; the suite now has 138 cases.
-- The detail view hides the Todos section when the session has no todo list, instead of showing an empty placeholder.
-- README screenshots remain queued for this release.
 
 ## v0.1.2 — 2026-11-24
 

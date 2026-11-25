@@ -22,6 +22,8 @@ Current line:
 - `v0.1.1` — project-list duplicate fix; no board data migration.
 - `v0.1.2` — per-project boards and project-scoped board files at project roots; one-time split
   of the v0.1.1 global board. Removed the task/board folder pickers.
+- `v0.1.3` — automatic project-ID adoption for duplicate OpenCode records, hidden empty Todos
+  section, and README screenshots. No data migration.
 
 ## Release process
 

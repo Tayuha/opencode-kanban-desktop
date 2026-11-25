@@ -10,7 +10,7 @@ A local/private GUI kanban plugin for **OpenCode Desktop 2.3.2**. It is a deskto
 notifications. It does **not** use tmux, launch terminals, kill processes, or make external network
 requests.
 
-Current release line: **v0.1.2**. The package is `private: true` and is installed from a git
+Current release line: **v0.1.3**. The package is `private: true` and is installed from a git
 checkout, not npm.
 
 ## Read first
@@ -30,7 +30,7 @@ checkout, not npm.
 Checkout: /home/tayuha/Projects/opencode-plugins-creation/opencode-kanban-desktop
 Remote:   git@github.com:Tayuha/opencode-kanban-desktop.git (SSH)
 Branch:   main
-Tags:     v0.1.0, v0.1.1, v0.1.2 (immutable)
+Tags:     v0.1.0, v0.1.1, v0.1.2, v0.1.3 (immutable)
 ```
 
 - Never move, delete, or re-create a published tag. Fix forward with a new patch version.
@@ -182,7 +182,7 @@ restart. Never rewrite a released tag. The full runbook is [`docs/upgrading.md`]
 
 - **v0.1.2** — released. Per-project boards/files, the one-time v0.1.1 split, the canonical
   no-change fix, and the worktree/session flow were verified in Desktop.
-- **v0.1.3** — open for README screenshots, automatic project-ID adoption for duplicate
-  OpenCode project records, and hiding the empty Todos section.
-- Still open for a full release: screenshots/docs completion, fresh-install smoke test, custom
-  icons when the SDK exposes them, and macOS/Windows testing.
+- **v0.1.3** — released. README screenshots, automatic project-ID adoption, and the hidden empty
+  Todos section are verified.
+- **v0.1.4** — open for the fresh-install smoke test, custom icons when the SDK exposes them, and
+  macOS/Windows verification.

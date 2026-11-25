@@ -1,6 +1,6 @@
 {
   "name": "opencode-kanban-desktop",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": true,
   "type": "module",
   "description": "Kanban board for OpenCode Desktop: tasks, git worktrees, and agent sessions.",
